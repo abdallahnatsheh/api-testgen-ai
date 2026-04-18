@@ -24,7 +24,8 @@ Return ONLY a valid JSON array. Each object must have exactly these fields:
   },
   "expected_result": {
     "status_code": 200,
-    "contains_key": "a single top-level key to assert exists in the JSON response body, or null"
+    "contains_key": "a single top-level key to assert exists in the JSON response body, or null",
+    "contains_value": {"key": "expected_value"} or null
   }
 }
 
@@ -33,6 +34,7 @@ Important rules:
 - "headers" should be empty {} unless a specific test needs a custom Content-Type or similar
 - Do not add Authorization headers — auth is handled globally by the test runner
 - "contains_key" must be a single top-level key (e.g. "token", "id") or null — not a nested path
+- "contains_value" is optional — use it when you can assert a specific value, e.g. {"role": "admin"} or {"count": 3}; set to null otherwise
 - Generate 8-12 test cases covering all 4 categories
 - Base expected status codes on standard HTTP conventions for the described endpoint
 
@@ -185,7 +187,14 @@ def _parse_response(text: str) -> list[TestCase]:
     text = text.strip()
     if text.startswith("```"):
         lines = text.splitlines()
-        text = "\n".join(lines[1:-1]).strip()
+        # drop opening fence line; find closing fence and drop everything after it
+        inner = lines[1:]
+        try:
+            close = next(i for i, l in enumerate(inner) if l.strip().startswith("```"))
+            inner = inner[:close]
+        except StopIteration:
+            pass
+        text = "\n".join(inner).strip()
     try:
         raw = json.loads(text)
     except json.JSONDecodeError:
@@ -220,7 +229,7 @@ def _call_claude(user_message: str) -> list[TestCase]:
 
     response = _client.messages.create(
         model=_model,
-        max_tokens=2048,
+        max_tokens=4096,
         system=[
             {
                 "type": "text",

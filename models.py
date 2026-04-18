@@ -26,6 +26,7 @@ class TestInput(BaseModel):
 class ExpectedResult(BaseModel):
     status_code: int
     contains_key: str | None = None
+    contains_value: dict | None = None  # e.g. {"key": "expected_value"}
 
 
 class TestCase(BaseModel):

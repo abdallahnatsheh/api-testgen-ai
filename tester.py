@@ -93,7 +93,17 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                 else:
                     key_ok = False
 
-            ok = status_ok and key_ok
+            value_ok = True
+            value_fail_reason = ""
+            if tc.expected_result.contains_value and isinstance(body, dict):
+                for k, expected in tc.expected_result.contains_value.items():
+                    actual = body.get(k)
+                    if actual != expected:
+                        value_ok = False
+                        value_fail_reason = f"expected {k}={expected!r}, got {actual!r}"
+                        break
+
+            ok = status_ok and key_ok and value_ok
 
             if ok:
                 passed += 1
@@ -109,6 +119,8 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                     reason_parts.append(
                         f"key '{tc.expected_result.contains_key}' missing from response"
                     )
+                if not value_ok:
+                    reason_parts.append(value_fail_reason)
                 verdict = f"{RED}✗ FAIL{RESET}  ({', '.join(reason_parts)})"
 
             logger.debug("Test '%s': status=%d key_ok=%s", tc.name, resp.status_code, key_ok)

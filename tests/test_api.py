@@ -22,12 +22,17 @@ def test_endpoint(test_case, base_url, global_headers):
         f"Response: {resp.text[:300]}"
     )
 
-    if tc.expected_result.contains_key:
+    if tc.expected_result.contains_key or tc.expected_result.contains_value:
         body = resp.json()
         assert isinstance(body, dict), (
-            f"Expected JSON object to check key '{tc.expected_result.contains_key}', "
-            f"got {type(body).__name__}"
+            f"Expected JSON object for key/value assertions, got {type(body).__name__}"
         )
-        assert tc.expected_result.contains_key in body, (
-            f"Key '{tc.expected_result.contains_key}' not found in response: {list(body.keys())}"
-        )
+        if tc.expected_result.contains_key:
+            assert tc.expected_result.contains_key in body, (
+                f"Key '{tc.expected_result.contains_key}' not found in response: {list(body.keys())}"
+            )
+        if tc.expected_result.contains_value:
+            for k, expected in tc.expected_result.contains_value.items():
+                assert body.get(k) == expected, (
+                    f"Expected {k}={expected!r}, got {body.get(k)!r}"
+                )

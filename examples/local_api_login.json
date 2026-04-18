@@ -1,0 +1,141 @@
+[
+  {
+    "name": "Valid admin login",
+    "category": "functional",
+    "description": "Correct credentials should return 200 and a token — WILL FAIL due to auth bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "admin@example.com",
+        "password": "admin123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token"
+    }
+  },
+  {
+    "name": "Valid user login",
+    "category": "functional",
+    "description": "Correct user credentials should return 200 and a token — WILL FAIL due to auth bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "user@example.com",
+        "password": "user123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token"
+    }
+  },
+  {
+    "name": "Wrong password must be rejected",
+    "category": "negative",
+    "description": "Incorrect password should return 401 — WILL FAIL because wrong password now grants access",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "admin@example.com",
+        "password": "wrongpass"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": null
+    }
+  },
+  {
+    "name": "Non-existent email returns 404",
+    "category": "negative",
+    "description": "Unknown email should return 404 — not affected by the bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "ghost@example.com",
+        "password": "admin123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null
+    }
+  },
+  {
+    "name": "Missing email field",
+    "category": "validation",
+    "description": "Request without email should return 422 — not affected by the bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "password": "admin123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null
+    }
+  },
+  {
+    "name": "Missing password field",
+    "category": "validation",
+    "description": "Request without password should return 422 — not affected by the bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "admin@example.com"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null
+    }
+  },
+  {
+    "name": "Empty string password",
+    "category": "edge_case",
+    "description": "Empty password should return 400 — not affected by the bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "admin@example.com",
+        "password": ""
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": null
+    }
+  },
+  {
+    "name": "Empty payload",
+    "category": "edge_case",
+    "description": "No body should return 422 — not affected by the bug",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null
+    }
+  }
+]

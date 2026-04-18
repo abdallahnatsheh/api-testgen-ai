@@ -1,0 +1,9 @@
+anthropic
+fastapi
+uvicorn
+requests
+pydantic
+google-genai
+openai
+json-repair
+pytest

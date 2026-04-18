@@ -1,0 +1,226 @@
+[
+  {
+    "name": "Create post successfully",
+    "category": "functional",
+    "description": "Validates that a post is created successfully and returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with missing userId",
+    "category": "validation",
+    "description": "Validates that creating a post without the required userId field returns an error response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create empty post title",
+    "category": "validation",
+    "description": "Validates that creating a post with an empty title returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with excessively long title",
+    "category": "validation",
+    "description": "Validates that creating a post with an excessively long title returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "a",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create duplicate post",
+    "category": "edge_case",
+    "description": "Validates that creating a duplicate post with the same content returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with invalid body type",
+    "category": "validation",
+    "description": "Validates that creating a post with an invalid body type returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": 123,
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with null title",
+    "category": "validation",
+    "description": "Validates that creating a post with null title returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": null,
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with only userId",
+    "category": "validation",
+    "description": "Validates that creating a post with only userId returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with negative userId",
+    "category": "validation",
+    "description": "Validates that creating a post with a negative userId returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": -1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with float userId",
+    "category": "validation",
+    "description": "Validates that creating a post with a float userId returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1.5
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post with string userId",
+    "category": "validation",
+    "description": "Validates that creating a post with a string userId returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": "1"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create post without body",
+    "category": "validation",
+    "description": "Validates that creating a post without the required body field returns a valid response",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  }
+]

@@ -1,0 +1,210 @@
+[
+  {
+    "name": "Create Post with Valid Payload",
+    "category": "functional",
+    "description": "Validates that a post can be successfully created with a complete and valid payload.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "Test Title",
+        "body": "Test Body Content",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Minimum Required Fields",
+    "category": "functional",
+    "description": "Validates that a post can be created with only the essential fields, as the API does not validate missing fields.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "Minimal Title"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Empty Payload",
+    "category": "functional",
+    "description": "Validates that a post can be created even with an empty JSON payload, as the API does not validate missing fields.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {},
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Large String Fields",
+    "category": "edge_case",
+    "description": "Validates handling of a post with unusually long string values for title and body.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "A long title string that exceeds typical character limits to test edge cases in data handling and storage, ensuring the API can gracefully process and respond to such inputs without errors or truncation issues. This string is intentionally made very long to push the boundaries of expected input sizes.",
+        "body": "A very, very long body content string that is designed to test the API's ability to handle extensive text data. This includes checking for potential memory issues, database column limits, and overall system stability when processing large payloads. The content here is purely for testing purposes and aims to simulate extreme user input scenarios.",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Non-Integer userId",
+    "category": "edge_case",
+    "description": "Validates that the API accepts a non-integer type for userId, as it does not validate field types.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "Title",
+        "body": "Body",
+        "userId": "one"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Null Values for Fields",
+    "category": "edge_case",
+    "description": "Validates that the API accepts null values for fields, as it does not validate field types.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": null,
+        "body": null,
+        "userId": null
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Additional Unspecified Fields",
+    "category": "validation",
+    "description": "Validates that the API accepts a payload with extra fields not defined in the schema, as it does not validate payloads.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "Title",
+        "body": "Body",
+        "userId": 1,
+        "extraField": "someValue",
+        "anotherField": 123,
+        "isActive": true
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Empty String Values",
+    "category": "validation",
+    "description": "Validates that the API accepts empty string values for text fields.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "",
+        "body": "",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Incorrect Content-Type",
+    "category": "negative",
+    "description": "Validates that the API still returns 201 even with an unsupported Content-Type, as it does not strictly validate requests.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {
+        "Content-Type": "application/xml"
+      }
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Missing Content-Type Header",
+    "category": "negative",
+    "description": "Validates that the API still returns 201 even when the Content-Type header is omitted, as it does not strictly validate requests.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": "foo",
+        "body": "bar",
+        "userId": 1
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  },
+  {
+    "name": "Create Post with Invalid Data Types in Payload",
+    "category": "negative",
+    "description": "Validates that the API still returns 201 even with invalid data types for fields, as it does not validate field types.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/posts",
+      "payload": {
+        "title": 123,
+        "body": true,
+        "userId": "invalid"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 201,
+      "contains_key": "id"
+    }
+  }
+]

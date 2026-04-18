@@ -32,8 +32,10 @@ api-test-ai/
 │   ├── conftest.py               # pytest CLI options (--test-file, --base-url, --bearer, --header)
 │   └── test_api.py               # Parametrized pytest test — one test per JSON test case
 ├── examples/                     # Ready-to-run test case files (no AI call needed)
-│   ├── local_api_login.json                # Tests for the sample api.py server
-│   ├── local_api_login_gemini.json         # Gemini-generated version of the above
+│   ├── local_api_login.json                # Handcrafted tests for the sample api.py /login
+│   ├── local_api_login_gemini.json         # Gemini-generated tests for sample api.py /login
+│   ├── test_login_gemini.json              # Gemini-generated tests for sample api.py /login (extended)
+│   ├── test_users_gemini.json              # Gemini-generated tests for sample api.py /users
 │   ├── jsonplaceholder_post_gemini.json    # Gemini tests for JSONPlaceholder POST /posts
 │   └── jsonplaceholder_post_ollama.json    # Ollama tests for JSONPlaceholder POST /posts
 └── .claude/                      # Claude Code project config (rules, skills, hooks)
@@ -215,7 +217,8 @@ ollama pull qwen2.5-coder:7b   # recommended — ~4.7 GB
   },
   "expected_result": {
     "status_code": 200,
-    "contains_key": "token"
+    "contains_key": "token",
+    "contains_value": { "email": "admin@example.com" }
   }
 }
 ```
@@ -224,7 +227,8 @@ ollama pull qwen2.5-coder:7b   # recommended — ~4.7 GB
 |-------|--------|-------------|
 | `category` | `functional` / `negative` / `edge_case` / `validation` | Test type |
 | `endpoint` | `/login` | Path only — tester prepends base URL |
-| `contains_key` | `"token"` / `null` | Optional key to assert exists in JSON response |
+| `contains_key` | `"token"` / `null` | Optional — asserts a top-level key exists in the JSON response |
+| `contains_value` | `{"email": "admin@example.com"}` / `null` | Optional — asserts a key has a specific value in the JSON response |
 
 ---
 

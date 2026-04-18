@@ -49,7 +49,7 @@ main.py
         └── retries up to 3x on JSONDecodeError or 503 UNAVAILABLE
   └── tester.run_tests(test_cases, base_url, global_headers) → int (failed count)
         └── merges global_headers + per-test headers on every request
-        └── requests.request() per TestCase → assert status_code + optional contains_key
+        └── requests.request() per TestCase → assert status_code + optional contains_key + optional contains_value
 ```
 
 ### TestCase schema
@@ -67,6 +67,7 @@ TestCase
   .expected_result   ExpectedResult
       .status_code   int
       .contains_key  str | None  (optional key to assert exists in JSON response body)
+      .contains_value dict | None (optional {key: value} to assert a specific value in response body)
 ```
 
 ### Two test runners
@@ -79,7 +80,7 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 ## Key details
 
 - `ai_client.py` auto-retries up to 3 times on `JSONDecodeError` (malformed AI output) and `503 UNAVAILABLE` (Gemini high demand), with 10/20/30s backoff on 503.
-- `_parse_response()` strips markdown code fences before `json.loads()` — Gemini sometimes wraps output in ` ```json ` blocks. Falls back to `json_repair` on parse failure.
+- `_parse_response()` strips markdown code fences before `json.loads()` — Gemini sometimes wraps output in ` ```json ` blocks. Fence stripping finds the closing fence explicitly (not just the last line) to handle trailing text. Falls back to `json_repair` on parse failure.
 - Ollama uses the OpenAI-compatible API at `http://localhost:11434/v1` — no API key needed.
 - `collect_inputs()` returns a `CollectedInput` dataclass (not a tuple) — fields: method, base_url, path, payload, description, auth_headers.
 - `run_tests()` returns `int` (failed count) — callers can act on it; standalone tester uses it for `sys.exit`.

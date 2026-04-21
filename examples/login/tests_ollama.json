@@ -1,0 +1,258 @@
+[
+  {
+    "name": "Valid credentials - admin@example.com",
+    "category": "functional",
+    "description": "Should return a JWT token for valid admin credentials",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Valid credentials - user@example.com",
+    "category": "functional",
+    "description": "Should return a JWT token for valid user credentials",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "user@example.com", "password": "user123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Wrong password",
+    "category": "negative",
+    "description": "Should return a 401 error for wrong password",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "wrong_password" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Invalid password" }
+    }
+  },
+  {
+    "name": "Unknown email",
+    "category": "negative",
+    "description": "Should return a 404 error for unknown email",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "unknown@example.com", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Locked account",
+    "category": "negative",
+    "description": "Should return a 403 error for locked account — currently a known bug (returns 200)",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "locked@example.com", "password": "locked123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 403,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Account is locked" }
+    }
+  },
+  {
+    "name": "Missing email field",
+    "category": "validation",
+    "description": "Should return a 422 error for missing email field",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Missing password field",
+    "category": "validation",
+    "description": "Should return a 422 error for missing password field",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Empty email string",
+    "category": "validation",
+    "description": "Should return a 400 error for empty email string",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Email and password are required" }
+    }
+  },
+  {
+    "name": "Empty password string",
+    "category": "validation",
+    "description": "Should return a 400 error for empty password string",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Email and password are required" }
+    }
+  },
+  {
+    "name": "Extra field in payload",
+    "category": "edge_case",
+    "description": "Should ignore extra fields in the payload",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "admin123", "extra_field": "value" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Non-email string as email",
+    "category": "edge_case",
+    "description": "Should return a 404 error for non-email string as email",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "not_an_email", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Numeric-only email input",
+    "category": "edge_case",
+    "description": "Should return a 404 error for numeric-only email input",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "1234567890", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Whitespace-padded email",
+    "category": "edge_case",
+    "description": "API does not trim input — padded email is treated as unknown user",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": " admin@example.com ", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Whitespace-padded password",
+    "category": "edge_case",
+    "description": "API does not trim input — padded password does not match stored value",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": " admin123 " },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Invalid password" }
+    }
+  },
+  {
+    "name": "Case-sensitive email",
+    "category": "edge_case",
+    "description": "Email matching is exact — ADMIN@example.com is not admin@example.com",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "ADMIN@example.com", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Case-sensitive password",
+    "category": "edge_case",
+    "description": "Password matching is exact — ADMIN123 is not admin123",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "ADMIN123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Invalid password" }
+    }
+  }
+]

@@ -1,0 +1,146 @@
+[
+  {
+    "name": "Get all users - success",
+    "category": "functional",
+    "description": "GET /users should return 200 with users array and count of 3",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": { "count": 3 }
+    }
+  },
+  {
+    "name": "Response includes count field",
+    "category": "functional",
+    "description": "Response body must include a count field equal to 3",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "count",
+      "contains_value": { "count": 3 }
+    }
+  },
+  {
+    "name": "POST method not allowed",
+    "category": "negative",
+    "description": "POST /users should return 405 Method Not Allowed",
+    "input": {
+      "method": "POST",
+      "endpoint": "/users",
+      "payload": {},
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "DELETE method not allowed",
+    "category": "negative",
+    "description": "DELETE /users should return 405 Method Not Allowed",
+    "input": {
+      "method": "DELETE",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "PUT method not allowed",
+    "category": "negative",
+    "description": "PUT /users should return 405 Method Not Allowed",
+    "input": {
+      "method": "PUT",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Response body has users key",
+    "category": "validation",
+    "description": "Response must always contain the users key",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Count is always 3",
+    "category": "validation",
+    "description": "The count field must always equal 3 — dataset is static",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "count",
+      "contains_value": { "count": 3 }
+    }
+  },
+  {
+    "name": "Query params are ignored",
+    "category": "edge_case",
+    "description": "Unsupported query params are silently ignored — still returns 200 with all 3 users",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users?limit=1&page=2",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": { "count": 3 }
+    }
+  },
+  {
+    "name": "Custom header is ignored",
+    "category": "edge_case",
+    "description": "Unknown headers are ignored — endpoint still returns 200",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": { "X-Custom-Header": "test-value" }
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": { "count": 3 }
+    }
+  }
+]

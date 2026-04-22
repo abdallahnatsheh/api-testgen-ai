@@ -305,6 +305,14 @@ def _setup_logging() -> None:
     root.addHandler(file_handler)
 
 
+def _flush_stdin() -> None:
+    try:
+        import termios
+        termios.tcflush(sys.stdin, termios.TCIFLUSH)
+    except Exception:
+        pass
+
+
 def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, count: int | None) -> None:
     collection_path = _prompt("Postman collection file path  (e.g. collection.json)")
     if not collection_path:
@@ -319,12 +327,14 @@ def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, 
 
     print(f"\n  {GREEN}✓ Loaded {len(requests)} requests from collection{RESET}\n")
 
+    description = _load_description()
+
     all_test_cases: list[TestCase] = []
 
     for req in requests:
         print(f"  {CYAN}Generating tests for:{RESET} {req.method} {req.path}  {DIM}({req.name}){RESET}")
         try:
-            test_cases = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, None, count)
+            test_cases = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, description, count)
             all_test_cases.extend(test_cases)
             print(f"  {GREEN}✓ {len(test_cases)} test cases generated{RESET}\n")
         except Exception as e:
@@ -336,6 +346,8 @@ def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, 
         sys.exit(1)
 
     print_test_cases(all_test_cases)
+
+    _flush_stdin()
 
     if _prompt("Save all test cases to file? (y/n)").lower() == "y":
         save_test_cases(all_test_cases)

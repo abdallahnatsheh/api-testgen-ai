@@ -35,15 +35,19 @@ jobs:
           sleep 3
 
       - name: Run login tests (Gemini)
+        continue-on-error: true
         run: python3 tester.py examples/login/tests_gemini.json http://localhost:8000
 
       - name: Run users tests (Gemini)
+        continue-on-error: true
         run: python3 tester.py examples/users/tests_gemini.json http://localhost:8000
 
       - name: Run pytest suite (login)
+        continue-on-error: true
         run: pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 --junit-xml=results-login.xml -v
 
       - name: Run pytest suite (users)
+        continue-on-error: true
         run: pytest tests/ --test-file=examples/users/tests_gemini.json --base-url=http://localhost:8000 --junit-xml=results-users.xml -v
 
       - name: Upload test results

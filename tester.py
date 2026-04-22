@@ -177,6 +177,11 @@ if __name__ == "__main__":
         dest="headers",
         help="Custom header in NAME=VALUE format (repeatable)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate the JSON file without sending any HTTP requests",
+    )
 
     args = parser.parse_args()
 
@@ -193,5 +198,9 @@ if __name__ == "__main__":
 
     with open(args.json_file) as f:
         cases = [TestCase.model_validate(tc) for tc in json.load(f)]
+
+    if args.dry_run:
+        print(f"{GREEN}✓ Dry run OK{RESET} — {len(cases)} test cases validated in {args.json_file}")
+        sys.exit(0)
 
     sys.exit(run_tests(cases, args.base_url, global_headers=global_headers))

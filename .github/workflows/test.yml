@@ -1,0 +1,54 @@
+name: API Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate test files (dry run)
+        run: |
+          python3 tester.py examples/login/tests_gemini.json http://localhost:8000 --dry-run
+          python3 tester.py examples/login/tests_ollama.json http://localhost:8000 --dry-run
+          python3 tester.py examples/users/tests_gemini.json http://localhost:8000 --dry-run
+          python3 tester.py examples/users/tests_ollama.json http://localhost:8000 --dry-run
+
+      - name: Start API server
+        run: |
+          python3 api.py &
+          sleep 3
+
+      - name: Run login tests (Gemini)
+        run: python3 tester.py examples/login/tests_gemini.json http://localhost:8000
+
+      - name: Run users tests (Gemini)
+        run: python3 tester.py examples/users/tests_gemini.json http://localhost:8000
+
+      - name: Run pytest suite (login)
+        run: pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 --junit-xml=results-login.xml -v
+
+      - name: Run pytest suite (users)
+        run: pytest tests/ --test-file=examples/users/tests_gemini.json --base-url=http://localhost:8000 --junit-xml=results-users.xml -v
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "*.xml"

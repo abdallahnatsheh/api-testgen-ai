@@ -35,7 +35,7 @@ Important rules:
 - Do not add Authorization headers — auth is handled globally by the test runner
 - "contains_key" must be a single top-level key (e.g. "token", "id") or null — not a nested path
 - "contains_value" is optional — use it when you can assert a specific value, e.g. {"role": "admin"} or {"count": 3}; set to null otherwise
-- Generate 8-12 test cases covering all 4 categories
+- Generate exactly the number of test cases requested, spread across all 4 categories
 - Base expected status codes on standard HTTP conventions for the described endpoint
 
 No markdown. No explanation. JSON array only."""
@@ -137,12 +137,13 @@ def setup(provider: str, model: str, api_key: str) -> None:
 # Public function
 # ---------------------------------------------------------------------------
 
-def generate_test_cases(method: str, endpoint: str, payload: str | None, description: str | None = None) -> list[TestCase]:
+def generate_test_cases(method: str, endpoint: str, payload: str | None, description: str | None = None, count: int | None = None) -> list[TestCase]:
     if not _provider:
         raise RuntimeError("Call ai_client.setup() before generate_test_cases().")
 
+    count_instruction = f"exactly {count}" if count else "8-12"
     user_message = (
-        f"Generate 8-12 test cases covering all 4 categories for:\n"
+        f"Generate {count_instruction} test cases covering all 4 categories for:\n"
         f"Method:   {method}\n"
         f"Endpoint: {endpoint}\n"
         f"Payload:  {payload or 'None'}\n"
@@ -182,12 +183,13 @@ def generate_test_cases(method: str, endpoint: str, payload: str | None, descrip
 # ---------------------------------------------------------------------------
 
 def _parse_response(text: str) -> list[TestCase]:
-    """Strip optional markdown fences and parse JSON into TestCase models."""
+    """Strip optional markdown fences, parse JSON, validate each test case."""
     from json_repair import repair_json
+    from pydantic import ValidationError
+
     text = text.strip()
     if text.startswith("```"):
         lines = text.splitlines()
-        # drop opening fence line; find closing fence and drop everything after it
         inner = lines[1:]
         try:
             close = next(i for i, l in enumerate(inner) if l.strip().startswith("```"))
@@ -195,12 +197,30 @@ def _parse_response(text: str) -> list[TestCase]:
         except StopIteration:
             pass
         text = "\n".join(inner).strip()
+
     try:
         raw = json.loads(text)
     except json.JSONDecodeError:
         repaired = repair_json(text)
         raw = json.loads(repaired)
-    return [TestCase.model_validate(tc) for tc in raw]
+
+    valid: list[TestCase] = []
+    for i, item in enumerate(raw):
+        try:
+            valid.append(TestCase.model_validate(item))
+        except ValidationError as e:
+            name = item.get("name", f"item {i + 1}") if isinstance(item, dict) else f"item {i + 1}"
+            logger.warning("Skipping test case %r — validation error: %s", name, e)
+
+    if not valid:
+        raise ValueError("All test cases returned by AI failed validation — check logs for details.")
+
+    if len(valid) < len(raw):
+        logger.warning("Validation: %d/%d test cases passed, %d skipped", len(valid), len(raw), len(raw) - len(valid))
+    else:
+        logger.info("Validation: all %d test cases passed", len(valid))
+
+    return valid
 
 
 def _call_gemini(user_message: str) -> list[TestCase]:

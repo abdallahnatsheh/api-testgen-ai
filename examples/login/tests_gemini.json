@@ -1,0 +1,178 @@
+[
+  {
+    "name": "Valid admin login",
+    "category": "functional",
+    "description": "Valid admin credentials should return 200 with a token.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": { "email": "admin@example.com" }
+    }
+  },
+  {
+    "name": "Valid user login",
+    "category": "functional",
+    "description": "Valid user credentials should return 200 with a token.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "user@example.com", "password": "user123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": { "email": "user@example.com" }
+    }
+  },
+  {
+    "name": "Wrong password",
+    "category": "negative",
+    "description": "Correct email but wrong password should return 401.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "wrongpassword" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Invalid password" }
+    }
+  },
+  {
+    "name": "Unknown email",
+    "category": "negative",
+    "description": "Email not registered in the system should return 404.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "unknown@example.com", "password": "password123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  },
+  {
+    "name": "Locked account",
+    "category": "negative",
+    "description": "Locked account should return 403 regardless of password.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "locked@example.com", "password": "locked123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 403,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Account is locked" }
+    }
+  },
+  {
+    "name": "Missing email field",
+    "category": "validation",
+    "description": "Missing email field should trigger Pydantic validation and return 422.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Missing password field",
+    "category": "validation",
+    "description": "Missing password field should trigger Pydantic validation and return 422.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": "detail",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Empty email string",
+    "category": "validation",
+    "description": "Empty email string is caught by app logic and returns 400.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Email and password are required" }
+    }
+  },
+  {
+    "name": "Empty password string",
+    "category": "validation",
+    "description": "Empty password string is caught by app logic and returns 400.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": { "detail": "Email and password are required" }
+    }
+  },
+  {
+    "name": "Extra field in payload",
+    "category": "edge_case",
+    "description": "Extra fields in the payload are silently ignored — should return 200.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "admin@example.com", "password": "admin123", "extra": "value" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null
+    }
+  },
+  {
+    "name": "Uppercase email",
+    "category": "edge_case",
+    "description": "Email matching is case-sensitive — ADMIN@example.com is not found.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": { "email": "ADMIN@example.com", "password": "admin123" },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": { "detail": "User not found" }
+    }
+  }
+]

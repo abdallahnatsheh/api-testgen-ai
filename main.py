@@ -181,6 +181,7 @@ class CollectedInput:
     payload: str | None
     description: str | None
     auth_headers: dict
+    count: int | None = None
 
 
 def _parse_base_and_path(url: str) -> tuple[str, str]:
@@ -214,6 +215,34 @@ def _collect_auth() -> dict:
     return {}
 
 
+def _load_description() -> str | None:
+    print(f"\n  {BOLD}API Description{RESET}  {DIM}(helps AI generate accurate tests){RESET}")
+    print(f"    {YELLOW}1{RESET}. Type inline")
+    print(f"    {YELLOW}2{RESET}. Load from file  {DIM}(.txt or .md){RESET}")
+    print(f"    {YELLOW}3{RESET}. Skip")
+    choice = _prompt("Choice", "3") or "3"
+
+    if choice == "1":
+        text = _prompt("Description")
+        return text or None
+
+    if choice == "2":
+        path = _prompt("File path  (e.g. login_api.md)")
+        if not path:
+            return None
+        try:
+            with open(path, encoding="utf-8") as f:
+                content = f.read().strip()
+            print(f"  {GREEN}✓ Loaded {len(content)} chars from {path}{RESET}")
+            logger.info("Description loaded from file: %s (%d chars)", path, len(content))
+            return content or None
+        except FileNotFoundError:
+            print(f"  {RED}File not found: {path} — skipping description.{RESET}")
+            return None
+
+    return None
+
+
 def collect_inputs() -> CollectedInput:
     print(f"\n{BOLD}  Describe the API endpoint to test{RESET}\n")
 
@@ -228,7 +257,15 @@ def collect_inputs() -> CollectedInput:
     print(f"  {DIM}Base URL: {base_url}   Path: {path}{RESET}")
 
     payload = _prompt("Request Payload (JSON, Enter to skip)") or None
-    description = _prompt("API Description (behaviour, quirks, Enter to skip)") or None
+    description = _load_description()
+
+    count_str = _prompt("Number of test cases to generate (Enter for default 8-12)") or ""
+    count: int | None = None
+    if count_str.isdigit() and int(count_str) > 0:
+        count = int(count_str)
+        print(f"  {DIM}Generating exactly {count} test cases{RESET}")
+    else:
+        print(f"  {DIM}Generating 8-12 test cases (default){RESET}")
 
     auth_headers = _collect_auth()
     if auth_headers:
@@ -241,6 +278,7 @@ def collect_inputs() -> CollectedInput:
         payload=payload,
         description=description,
         auth_headers=auth_headers,
+        count=count,
     )
 
 
@@ -248,14 +286,28 @@ def collect_inputs() -> CollectedInput:
 # Entry point
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s  [%(levelname)-8s]  %(message)s",
-        datefmt="%H:%M:%S",
-        stream=sys.stdout,
-    )
+def _setup_logging() -> None:
+    fmt = "%(asctime)s  [%(levelname)-8s]  %(name)s — %(message)s"
+    datefmt = "%H:%M:%S"
 
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter(fmt, datefmt))
+
+    file_handler = logging.FileHandler("test_run.log", encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(fmt, datefmt))
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    root.addHandler(console)
+    root.addHandler(file_handler)
+
+
+def main() -> None:
+    _setup_logging()
+
+    print(f"  {DIM}Detailed logs → test_run.log{RESET}\n")
     provider, model, api_key = select_provider()
     ai_client.setup(provider, model, api_key)
 
@@ -268,7 +320,7 @@ def main() -> None:
     logger.info("Generating for %s %s%s", inputs.method, inputs.base_url, inputs.path)
 
     try:
-        test_cases = ai_client.generate_test_cases(inputs.method, inputs.path, inputs.payload, inputs.description)
+        test_cases = ai_client.generate_test_cases(inputs.method, inputs.path, inputs.payload, inputs.description, inputs.count)
     except Exception as e:
         logger.error("Generation failed: %s", e)
         print(f"\n  {RED}Error: {e}{RESET}\n")

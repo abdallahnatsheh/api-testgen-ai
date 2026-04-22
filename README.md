@@ -172,6 +172,43 @@ A sample collection is included at `examples/postman/api-testgen-sample.postman_
 
 ---
 
+### Non-interactive mode (CLI args)
+
+Skip all prompts by passing arguments directly:
+
+```bash
+# Single endpoint
+python3 main.py \
+  --url http://localhost:8000/login \
+  --method POST \
+  --provider ollama \
+  --model qwen2.5-coder:7b \
+  --count 5 \
+  --save tests.json \
+  --run
+
+# Postman collection
+python3 main.py \
+  --postman examples/postman/api-testgen-sample.postman_collection.json \
+  --base-url http://localhost:8000 \
+  --provider gemini \
+  --api-key $GEMINI_API_KEY \
+  --description examples/login/description.md \
+  --count 8 \
+  --save tests.json \
+  --run
+
+# With auth
+python3 main.py --url http://localhost:8000/login --method POST \
+  --bearer mytoken \
+  --header X-API-Key=abc \
+  --provider ollama --model qwen2.5-coder:7b --run
+```
+
+All args are optional — any omitted arg falls back to the interactive prompt. Run `python3 main.py --help` to see all options.
+
+---
+
 ### Run tests — CLI runner (colored output)
 
 ```bash

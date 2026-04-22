@@ -12,6 +12,9 @@ CLI tool that uses AI (Gemini, Claude, OpenAI, or Ollama) to generate and execut
 pip install -r requirements.txt                               # install deps
 python3 api.py                                                # start sample FastAPI server on :8000
 python3 main.py                                               # run the interactive CLI tool
+python3 main.py --url http://host/path --method POST          # non-interactive single endpoint
+python3 main.py --postman col.json --base-url http://host     # non-interactive Postman import
+python3 main.py --help                                        # show all CLI args
 python3 tester.py <file.json> <base_url>                      # CLI runner standalone
 python3 tester.py <file.json> <base_url> --bearer <token>     # with Bearer auth
 python3 tester.py <file.json> <base_url> --header X-API-Key=x # with custom header
@@ -122,6 +125,7 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 - `postman_importer.py` parses Postman collection v2.1 JSON — supports nested folders, raw JSON body, query params. Returns `list[PostmanRequest]` (name, method, path, payload, headers).
 - `tester.py --dry-run` validates JSON test case files against the `TestCase` schema without sending any HTTP requests — used in CI to catch malformed files before running the server.
 - `main.py` input mode 2 (Postman import) calls `load_collection()`, prompts for a description once, then generates test cases for each request in the collection.
+- `main.py` supports full CLI args (`--url`, `--postman`, `--method`, `--base-url`, `--payload`, `--description`, `--count`, `--bearer`, `--header`, `--save`, `--run`, `--provider`, `--model`, `--api-key`) — interactive prompts are kept as fallback when args are omitted.
 
 ## Examples
 

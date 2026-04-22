@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "api-testgen-ai sample",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Login - valid credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"user@example.com\", \"password\": \"secret\"}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/login",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Login - missing password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"user@example.com\"}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/login",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Login - locked account",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"locked@example.com\", \"password\": \"secret\"}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/login",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get all users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/users",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Get users with limit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/users?limit=2",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["users"],
+              "query": [{ "key": "limit", "value": "2" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

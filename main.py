@@ -10,6 +10,7 @@ from ai_client import PROVIDERS
 from colors import (BOLD, CYAN, DIM, GREEN, RED, RESET, YELLOW,
                     CATEGORY_COLOR, CATEGORY_LABEL)
 from models import TestCase
+from postman_importer import load_collection
 from tester import run_tests
 
 SETTINGS_FILE = "settings.json"
@@ -304,6 +305,49 @@ def _setup_logging() -> None:
     root.addHandler(file_handler)
 
 
+def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, count: int | None) -> None:
+    collection_path = _prompt("Postman collection file path  (e.g. collection.json)")
+    if not collection_path:
+        print(f"  {RED}File path is required. Exiting.{RESET}\n")
+        sys.exit(1)
+
+    try:
+        requests = load_collection(collection_path)
+    except Exception as e:
+        print(f"  {RED}Failed to load collection: {e}{RESET}\n")
+        sys.exit(1)
+
+    print(f"\n  {GREEN}✓ Loaded {len(requests)} requests from collection{RESET}\n")
+
+    all_test_cases: list[TestCase] = []
+
+    for req in requests:
+        print(f"  {CYAN}Generating tests for:{RESET} {req.method} {req.path}  {DIM}({req.name}){RESET}")
+        try:
+            test_cases = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, None, count)
+            all_test_cases.extend(test_cases)
+            print(f"  {GREEN}✓ {len(test_cases)} test cases generated{RESET}\n")
+        except Exception as e:
+            logger.error("Generation failed for %s %s: %s", req.method, req.path, e)
+            print(f"  {RED}✗ Failed: {e}{RESET}\n")
+
+    if not all_test_cases:
+        print(f"  {RED}No test cases generated. Exiting.{RESET}\n")
+        sys.exit(1)
+
+    print_test_cases(all_test_cases)
+
+    if _prompt("Save all test cases to file? (y/n)").lower() == "y":
+        save_test_cases(all_test_cases)
+
+    if _prompt("Execute test cases against the API? (y/n)").lower() != "y":
+        print(f"\n  Done. Test cases generated but not executed.\n")
+        return
+
+    merged_headers = {**auth_headers}
+    run_tests(all_test_cases, base_url, global_headers=merged_headers)
+
+
 def main() -> None:
     _setup_logging()
 
@@ -313,6 +357,22 @@ def main() -> None:
 
     provider_label = PROVIDERS[provider]["label"]
     print_banner(provider_label, model)
+
+    print(f"\n{BOLD}  Input Mode{RESET}\n")
+    print(f"    {YELLOW}1{RESET}. Enter endpoint manually")
+    print(f"    {YELLOW}2{RESET}. Import Postman collection")
+    mode = _prompt("Choice", "1") or "1"
+
+    if mode == "2":
+        base_url = _prompt("Base URL  (e.g. http://localhost:8000)")
+        if not base_url:
+            print(f"\n  {RED}Base URL is required. Exiting.{RESET}\n")
+            sys.exit(1)
+        count_str = _prompt("Number of test cases per request (Enter for default 8-12)") or ""
+        count: int | None = int(count_str) if count_str.isdigit() and int(count_str) > 0 else None
+        auth_headers = _collect_auth()
+        _run_postman_import(provider_label, base_url, auth_headers, count)
+        return
 
     inputs = collect_inputs()
 

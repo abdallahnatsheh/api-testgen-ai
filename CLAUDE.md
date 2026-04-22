@@ -22,12 +22,13 @@ pytest tests/ --test-file=<file.json> --base-url=<url> --junit-xml=results.xml  
 ## Architecture
 
 ```
-main.py          CLI — loads/saves settings.json, collects endpoint input, orchestrates flow
-ai_client.py     Multi-provider AI client (Gemini + Claude + OpenAI + Ollama) → returns list[TestCase]
-tester.py        Colored CLI test runner — returns failed count, exits non-zero on failures
-models.py        Pydantic models: TestCase, TestInput, ExpectedResult — with field validators
-colors.py        Shared ANSI color constants (used by main.py and tester.py)
-api.py           Sample FastAPI server: GET /users, POST /login (with locked account logic)
+main.py              CLI — loads/saves settings.json, collects endpoint input, orchestrates flow
+ai_client.py         Multi-provider AI client (Gemini + Claude + OpenAI + Ollama) → returns list[TestCase]
+tester.py            Colored CLI test runner — returns failed count, exits non-zero on failures
+models.py            Pydantic models: TestCase, TestInput, ExpectedResult — with field validators
+colors.py            Shared ANSI color constants (used by main.py and tester.py)
+postman_importer.py  Parses Postman collection v2.1 JSON → list[PostmanRequest] (nested folders supported)
+api.py               Sample FastAPI server: GET /users, POST /login (with locked account logic)
 pytest.ini       pytest config — disables class collection to avoid conflict with TestCase model
 tests/
   conftest.py    pytest fixtures and CLI options (--test-file, --base-url, --bearer, --header)
@@ -41,6 +42,8 @@ examples/        Ready-to-run JSON test case files, organized by endpoint
     description.md
     tests_gemini.json
     tests_ollama.json
+  postman/
+    api-testgen-sample.postman_collection.json   Sample Postman collection (login + users)
 settings.json    Saved provider/model/api_key — gitignored, created on first run
 test_run.log     Debug log written on every run — gitignored
 ```
@@ -116,6 +119,9 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 - `settings.json` stores provider, model, and API key in plain text — never commit it (already in `.gitignore`).
 - FastAPI returns `422` for missing/invalid fields (Pydantic validation), not `400` — test cases must expect `422` for schema errors.
 - `LOCKED_ACCOUNTS` set in `api.py` controls which emails return 403 — `locked@example.com` is the known example. This is a known bug: the account currently returns 200 instead of 403.
+- `postman_importer.py` parses Postman collection v2.1 JSON — supports nested folders, raw JSON body, query params. Returns `list[PostmanRequest]` (name, method, path, payload, headers).
+- `tester.py --dry-run` validates JSON test case files against the `TestCase` schema without sending any HTTP requests — used in CI to catch malformed files before running the server.
+- `main.py` input mode 2 (Postman import) calls `load_collection()`, prompts for a description once, then generates test cases for each request in the collection.
 
 ## Examples
 

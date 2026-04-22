@@ -360,33 +360,163 @@ def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, 
     run_tests(all_test_cases, base_url, global_headers=merged_headers)
 
 
+def _parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(
+        prog="main.py",
+        description="AI-powered API test case generator",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    # Input mode
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--url", metavar="URL", help="Full endpoint URL  (e.g. http://localhost:8000/login)")
+    group.add_argument("--postman", metavar="FILE", help="Postman collection JSON file")
+
+    parser.add_argument("--method", metavar="METHOD", default="GET", help="HTTP method (default: GET)")
+    parser.add_argument("--base-url", metavar="URL", help="Base URL for Postman import  (e.g. http://localhost:8000)")
+    parser.add_argument("--payload", metavar="JSON", help="Request payload as JSON string")
+    parser.add_argument("--description", metavar="FILE", help="Path to API description .md file")
+    parser.add_argument("--count", metavar="N", type=int, help="Number of test cases to generate per endpoint")
+    parser.add_argument("--bearer", metavar="TOKEN", help="Bearer token for auth")
+    parser.add_argument("--header", metavar="NAME=VALUE", action="append", dest="headers", help="Custom header (repeatable)")
+    parser.add_argument("--save", metavar="FILE", help="Save test cases to this file automatically")
+    parser.add_argument("--run", action="store_true", help="Execute test cases immediately after generation")
+    parser.add_argument("--provider", metavar="PROVIDER", choices=["gemini", "claude", "openai", "ollama"], help="AI provider")
+    parser.add_argument("--model", metavar="MODEL", help="Model name")
+    parser.add_argument("--api-key", metavar="KEY", help="API key for the provider")
+
+    return parser.parse_args()
+
+
+def _build_auth_headers(args) -> dict:
+    headers = {}
+    if args.bearer:
+        headers["Authorization"] = f"Bearer {args.bearer}"
+    if args.headers:
+        for h in args.headers:
+            if "=" not in h:
+                print(f"  {RED}Invalid header format: {h!r}  (expected NAME=VALUE){RESET}")
+                sys.exit(1)
+            name, _, value = h.partition("=")
+            headers[name.strip()] = value.strip()
+    return headers
+
+
+def _load_description_from_file(path: str) -> str | None:
+    try:
+        from pathlib import Path
+        content = Path(path).read_text(encoding="utf-8").strip()
+        print(f"  {GREEN}✓ Description loaded from {path}{RESET}")
+        return content or None
+    except FileNotFoundError:
+        print(f"  {RED}Description file not found: {path}{RESET}")
+        return None
+
+
 def main() -> None:
     _setup_logging()
+    args = _parse_args()
+    non_interactive = bool(args.url or args.postman)
 
     print(f"  {DIM}Detailed logs → test_run.log{RESET}\n")
-    provider, model, api_key = select_provider()
-    ai_client.setup(provider, model, api_key)
 
-    provider_label = PROVIDERS[provider]["label"]
+    # Provider setup
+    if non_interactive and args.provider:
+        provider = args.provider
+        model = args.model or list(PROVIDERS[provider]["models"].values())[0][0]
+        api_key = args.api_key or ("ollama" if provider == "ollama" else "")
+        if not api_key:
+            print(f"  {RED}--api-key is required for {provider}{RESET}\n")
+            sys.exit(1)
+        ai_client.setup(provider, model, api_key)
+        provider_label = PROVIDERS[provider]["label"]
+    else:
+        provider, model, api_key = select_provider()
+        ai_client.setup(provider, model, api_key)
+        provider_label = PROVIDERS[provider]["label"]
+
     print_banner(provider_label, model)
 
-    print(f"\n{BOLD}  Input Mode{RESET}\n")
-    print(f"    {YELLOW}1{RESET}. Enter endpoint manually")
-    print(f"    {YELLOW}2{RESET}. Import Postman collection")
-    mode = _prompt("Choice", "1") or "1"
+    auth_headers = _build_auth_headers(args) if non_interactive else {}
+    count: int | None = args.count if non_interactive else None
+    description: str | None = None
 
-    if mode == "2":
-        base_url = _prompt("Base URL  (e.g. http://localhost:8000)")
+    if args.description:
+        description = _load_description_from_file(args.description)
+
+    # --- Postman mode ---
+    if args.postman:
+        base_url = args.base_url
         if not base_url:
-            print(f"\n  {RED}Base URL is required. Exiting.{RESET}\n")
+            print(f"  {RED}--base-url is required with --postman{RESET}\n")
             sys.exit(1)
-        count_str = _prompt("Number of test cases per request (Enter for default 8-12)") or ""
-        count: int | None = int(count_str) if count_str.isdigit() and int(count_str) > 0 else None
-        auth_headers = _collect_auth()
-        _run_postman_import(provider_label, base_url, auth_headers, count)
+        if not description:
+            description = _load_description()
+        if not auth_headers:
+            auth_headers = _collect_auth()
+
+        try:
+            postman_requests = load_collection(args.postman)
+        except Exception as e:
+            print(f"  {RED}Failed to load collection: {e}{RESET}\n")
+            sys.exit(1)
+
+        print(f"\n  {GREEN}✓ Loaded {len(postman_requests)} requests from collection{RESET}\n")
+        all_test_cases: list[TestCase] = []
+
+        for req in postman_requests:
+            print(f"  {CYAN}Generating tests for:{RESET} {req.method} {req.path}  {DIM}({req.name}){RESET}")
+            try:
+                tcs = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, description, count)
+                all_test_cases.extend(tcs)
+                print(f"  {GREEN}✓ {len(tcs)} test cases generated{RESET}\n")
+            except Exception as e:
+                logger.error("Generation failed for %s %s: %s", req.method, req.path, e)
+                print(f"  {RED}✗ Failed: {e}{RESET}\n")
+
+        if not all_test_cases:
+            print(f"  {RED}No test cases generated. Exiting.{RESET}\n")
+            sys.exit(1)
+
+        print_test_cases(all_test_cases)
+        _flush_stdin()
+
+        if args.save:
+            with open(args.save, "w") as f:
+                json.dump([tc.model_dump() for tc in all_test_cases], f, indent=2)
+            print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
+        elif _prompt("Save all test cases to file? (y/n)").lower() == "y":
+            save_test_cases(all_test_cases)
+
+        if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
+            run_tests(all_test_cases, base_url, global_headers=auth_headers)
+        else:
+            print(f"\n  Done. Test cases generated but not executed.\n")
         return
 
-    inputs = collect_inputs()
+    # --- Manual mode ---
+    if args.url:
+        base_url, path = _parse_base_and_path(args.url)
+        print(f"  {DIM}Base URL: {base_url}   Path: {path}{RESET}")
+        if not description and not non_interactive:
+            description = _load_description()
+        if not auth_headers and not non_interactive:
+            auth_headers = _collect_auth()
+        if count is None and not non_interactive:
+            count_str = _prompt("Number of test cases to generate (Enter for default 8-12)") or ""
+            count = int(count_str) if count_str.isdigit() and int(count_str) > 0 else None
+        inputs = CollectedInput(
+            method=args.method.upper(),
+            base_url=base_url,
+            path=path,
+            payload=args.payload,
+            description=description,
+            auth_headers=auth_headers,
+            count=count,
+        )
+    else:
+        inputs = collect_inputs()
 
     print(f"\n  Generating test cases with {provider_label}…\n")
     logger.info("Generating for %s %s%s", inputs.method, inputs.base_url, inputs.path)
@@ -399,16 +529,20 @@ def main() -> None:
         sys.exit(1)
 
     print_test_cases(test_cases)
+    _flush_stdin()
 
-    if _prompt("Save test cases to file? (y/n)").lower() == "y":
+    if args.save:
+        with open(args.save, "w") as f:
+            json.dump([tc.model_dump() for tc in test_cases], f, indent=2)
+        print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
+    elif _prompt("Save test cases to file? (y/n)").lower() == "y":
         save_test_cases(test_cases)
 
-    if _prompt("Execute test cases against the API? (y/n)").lower() != "y":
+    if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
+        logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
+        run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
+    else:
         print(f"\n  Done. Test cases generated but not executed.\n")
-        return
-
-    logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
-    run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
 
 
 if __name__ == "__main__":

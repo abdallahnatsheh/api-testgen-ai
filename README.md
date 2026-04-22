@@ -8,11 +8,13 @@ A CLI tool that uses AI to automatically generate and execute API test cases. Su
 
 - AI-generated test cases covering 4 categories: **Functional**, **Negative**, **Edge Cases**, **Validation**
 - **4 AI providers**: Google Gemini (free), Anthropic Claude, OpenAI, Ollama (local)
+- **Postman collection import** — point the tool at a `.json` Postman collection and generate tests for every request automatically
 - **Description file support** — load a `.md` file describing your API so the AI generates accurate tests instead of guessing
 - **Configurable test count** — request an exact number of test cases or use the default (8–12)
 - **`contains_value` assertions** — assert a specific key-value pair in the response body (e.g. `{"count": 3}`)
 - **Input validation & normalization** — invalid AI output is auto-corrected or skipped; never crashes on bad AI JSON
 - **Two test runners**: colored CLI (`tester.py`) and pytest (`tests/`) for CI/CD pipelines
+- **CI/CD ready** — GitHub Actions workflow included; `--dry-run` flag validates test files without a live server
 - **Debug logging** — full debug log written to `test_run.log` on every run
 - Saves settings (provider, model, API key) so you only configure once
 - Optional auth: Bearer token or custom header (e.g. `X-API-Key`)
@@ -144,6 +146,29 @@ How many test cases? (press Enter for 8-12):
 Press Enter for the default range or type an exact number (e.g. `20`).
 
 The AI generates test cases, then you can **save** them to a JSON file and/or **run** them immediately.
+
+---
+
+### Import a Postman collection
+
+Select **input mode 2** at startup instead of entering an endpoint manually:
+
+```
+Input Mode:
+  1. Enter endpoint manually
+  2. Import Postman collection   ← pick this
+```
+
+You'll be prompted for:
+- **Base URL** — e.g. `http://localhost:8000`
+- **Test case count** — per request, or Enter for default
+- **Auth** — Bearer token, API Key header, or none
+- **Collection file path** — e.g. `examples/postman/api-testgen-sample.postman_collection.json`
+- **Description** — optional `.md` file applied to all requests
+
+The tool generates a full test suite for every request in the collection and lets you save and run them all at once.
+
+A sample collection is included at `examples/postman/api-testgen-sample.postman_collection.json`.
 
 ---
 

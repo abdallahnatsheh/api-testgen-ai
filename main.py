@@ -535,10 +535,14 @@ def main() -> None:
         with open(args.save, "w") as f:
             json.dump([tc.model_dump() for tc in test_cases], f, indent=2)
         print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
-    elif _prompt("Save test cases to file? (y/n)").lower() == "y":
-        save_test_cases(test_cases)
+    elif not non_interactive:
+        if _prompt("Save test cases to file? (y/n)").lower() == "y":
+            save_test_cases(test_cases)
 
-    if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
+    if args.run:
+        logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
+        run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
+    elif not non_interactive and _prompt("Execute test cases against the API? (y/n)").lower() == "y":
         logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
         run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
     else:

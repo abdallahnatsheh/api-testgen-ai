@@ -41,6 +41,15 @@ def get_users():
     return {"users": USERS, "count": len(USERS)}
 
 
+@app.get("/users/{user_id}")
+def get_user(user_id: int):
+    """Return a single user by ID."""
+    user = next((u for u in USERS if u["id"] == user_id), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
 @app.post("/login")
 def login(body: LoginRequest):
     """Validate credentials and return a token."""

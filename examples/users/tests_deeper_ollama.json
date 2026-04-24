@@ -1,0 +1,223 @@
+[
+  {
+    "name": "GET /users should return 200 with correct data",
+    "category": "functional",
+    "description": "Verify that GET /users returns a 200 status code and the correct user data.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "admin",
+                    "user"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "email",
+                "role"
+              ]
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "GET /users with POST method should return 405",
+    "category": "negative",
+    "description": "Verify that GET /users returns a 405 status code when using the POST method.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users with DELETE method should return 405",
+    "category": "negative",
+    "description": "Verify that GET /users returns a 405 status code when using the DELETE method.",
+    "input": {
+      "method": "DELETE",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users with PUT method should return 405",
+    "category": "negative",
+    "description": "Verify that GET /users returns a 405 status code when using the PUT method.",
+    "input": {
+      "method": "PUT",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users with query params should return 200",
+    "category": "edge_case",
+    "description": "Verify that GET /users returns a 200 status code even if query parameters are provided.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users?limit=10&offset=0",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users with custom headers should return 200",
+    "category": "edge_case",
+    "description": "Verify that GET /users returns a 200 status code even if custom headers are provided.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {
+        "X-Custom-Header": "value"
+      }
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users should validate response body structure",
+    "category": "validation",
+    "description": "Verify that the response body contains both `users` and `count` keys.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "GET /users should validate count value",
+    "category": "validation",
+    "description": "Verify that the `count` key in the response body is always 3.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  }
+]

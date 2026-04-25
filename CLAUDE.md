@@ -30,13 +30,13 @@ pytest tests/ --test-file=<file.json> --base-url=<url> --html=report.html --self
 ```
 main.py              CLI — loads/saves settings.json, collects endpoint input, orchestrates flow
 ai_client.py         Multi-provider AI client (Gemini + Claude + OpenAI + Ollama) → returns list[TestCase]
-tester.py            Colored CLI test runner — returns failed count, exits non-zero on failures
+tester.py            Colored CLI test runner — returns failed count, exits non-zero on failures; --html writes HTML report
 models.py            Pydantic models: TestCase, TestInput, ExpectedResult — with field validators
 colors.py            Shared ANSI color constants (used by main.py and tester.py)
 postman_importer.py  Parses Postman collection v2.1 JSON → list[PostmanRequest] (nested folders supported)
 openapi_importer.py  Parses OpenAPI 3.x / Swagger 2.x YAML or JSON → base_url + list[OpenAPIRequest]
 api.py               Sample FastAPI server: GET /users, GET /users/{user_id}, POST /login (with locked account logic)
-pytest.ini       pytest config — disables class collection to avoid conflict with TestCase model
+pytest.ini       pytest config — disables class collection; auto-applies tests/report.css via addopts
 tests/
   conftest.py    pytest fixtures and CLI options (--test-file, --base-url, --bearer, --header)
   test_api.py    parametrized pytest test — one test per JSON test case
@@ -79,7 +79,7 @@ main.py
         └── prompts for optional test case count (default: 8-12, or exact number)
   └── ai_client.generate_test_cases(method, path, payload, description, count) → list[TestCase]
         └── retries up to 3x on JSONDecodeError or 503 UNAVAILABLE
-  └── tester.run_tests(test_cases, base_url, global_headers) → int (failed count)
+  └── tester.run_tests(test_cases, base_url, global_headers, html_path) → int (failed count)
         └── merges global_headers + per-test headers on every request
         └── requests.request() per TestCase → assert status_code + optional contains_key + optional contains_value
         └── also asserts max_response_time_ms, response_headers, response_schema when set
@@ -121,7 +121,7 @@ CollectedInput
 
 ### Two test runners
 
-- `tester.py` — colored, verbose, human-friendly. Returns failed count; standalone exits `sys.exit(failed)`.
+- `tester.py` — colored, verbose, human-friendly. Returns failed count; standalone exits `sys.exit(failed)`. `--html FILE` writes a self-contained HTML report (no extra dependencies).
 - `tests/` (pytest) — CI/CD-friendly. Each JSON test case is a named pytest test. Supports `-k` filtering, `--junit-xml`, and all standard pytest flags.
 
 Both share the same JSON format and auth options (`--bearer`, `--header`).
@@ -134,7 +134,8 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 - `models.py` normalizes AI output: method → uppercase, endpoint → path-only with leading `/`, category aliases (e.g. `"positive"` → `"functional"`) are mapped to valid values. AI-generated strings/lists/bools in dict fields (`contains_value`, `response_headers`, `response_schema`) are coerced to `None` rather than dropping the whole test case. AI-generated floats/digit-strings in `max_response_time_ms` are coerced to `int`.
 - Ollama uses the OpenAI-compatible API at `http://localhost:11434/v1` — no API key needed.
 - `collect_inputs()` returns a `CollectedInput` dataclass (not a tuple) — fields: method, base_url, path, payload, description, auth_headers, count.
-- `run_tests()` returns `int` (failed count) — standalone tester uses it for `sys.exit`.
+- `run_tests()` returns `int` (failed count) — standalone tester uses it for `sys.exit`. Optional `html_path` param writes a self-contained HTML report.
+- `tests/report.css` — minimal CSS applied to pytest-html reports automatically via `addopts` in `pytest.ini`. Increases font sizes and adds green/red pass/fail colors. No dark mode.
 - `colors.py` is the single source of ANSI constants — never redefine them in other files.
 - `api.py` uses `HTTPException` for all error responses — plain `return (dict, status)` tuples don't work in FastAPI.
 - `settings.json` stores provider, model, and API key in plain text — never commit it (already in `.gitignore`).

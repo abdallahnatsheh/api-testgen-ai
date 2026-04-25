@@ -14,6 +14,7 @@ python3 api.py                                                # start sample Fas
 python3 main.py                                               # run the interactive CLI tool
 python3 main.py --url http://host/path --method POST          # non-interactive single endpoint
 python3 main.py --postman col.json --base-url http://host     # non-interactive Postman import
+python3 main.py --openapi spec.yaml                           # OpenAPI/Swagger import (prompts for description)
 python3 main.py --help                                        # show all CLI args
 python3 tester.py <file.json> <base_url>                      # CLI runner standalone
 python3 tester.py <file.json> <base_url> --bearer <token>     # with Bearer auth
@@ -31,6 +32,7 @@ tester.py            Colored CLI test runner — returns failed count, exits non
 models.py            Pydantic models: TestCase, TestInput, ExpectedResult — with field validators
 colors.py            Shared ANSI color constants (used by main.py and tester.py)
 postman_importer.py  Parses Postman collection v2.1 JSON → list[PostmanRequest] (nested folders supported)
+openapi_importer.py  Parses OpenAPI 3.x / Swagger 2.x YAML or JSON → base_url + list[OpenAPIRequest]
 api.py               Sample FastAPI server: GET /users, GET /users/{user_id}, POST /login (with locked account logic)
 pytest.ini       pytest config — disables class collection to avoid conflict with TestCase model
 tests/
@@ -51,6 +53,12 @@ examples/        Ready-to-run JSON test case files, organized by endpoint
     tests_ollama.json
   postman/
     api-testgen-sample.postman_collection.json   Sample Postman collection (login + users)
+  openapi/
+    api-testgen-sample.yaml   OpenAPI 3.0 spec for the sample API (login + users)
+    tests_gemini.json         Test cases generated from the spec by Gemini
+  pokeapi/
+    description.md            Accurate PokéAPI description used to generate tests
+    tests_pokemon.json        10 AI-generated tests for GET /api/v2/pokemon/{name} (9/10 pass)
 settings.json    Saved provider/model/api_key — gitignored, created on first run
 test_run.log     Debug log written on every run — gitignored
 ```
@@ -131,6 +139,8 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 - FastAPI returns `422` for missing/invalid fields (Pydantic validation), not `400` — test cases must expect `422` for schema errors.
 - `LOCKED_ACCOUNTS` set in `api.py` controls which emails return 403 — `locked@example.com` is the known example. This is a known bug: the account currently returns 200 instead of 403.
 - `postman_importer.py` parses Postman collection v2.1 JSON — supports nested folders, raw JSON body, query params. Returns `list[PostmanRequest]` (name, method, path, payload, headers).
+- `openapi_importer.py` parses OpenAPI 3.x and Swagger 2.x specs (YAML or JSON). Extracts base URL from `servers[0].url` (OpenAPI 3.x) or `host`+`basePath` (Swagger 2.x). Generates example payloads from request body schemas. Returns `tuple[str, list[OpenAPIRequest]]`. Always prompts for a description even in non-interactive mode — specs rarely have complete enough descriptions for good AI test generation.
+- `--openapi` flag in `main.py` uses `--base-url` to override the spec's server URL if needed.
 - `tester.py --dry-run` validates JSON test case files against the `TestCase` schema without sending any HTTP requests — used in CI to catch malformed files before running the server.
 - `main.py` input mode 2 (Postman import) calls `load_collection()`, prompts for a description once, then generates test cases for each request in the collection.
 - `main.py` supports full CLI args (`--url`, `--postman`, `--method`, `--base-url`, `--payload`, `--description`, `--count`, `--bearer`, `--header`, `--save`, `--run`, `--provider`, `--model`, `--api-key`) — interactive prompts are kept as fallback when args are omitted.
@@ -147,4 +157,5 @@ Run any file against the local server:
 python3 api.py &
 python3 tester.py examples/login/tests_gemini.json http://localhost:8000
 python3 tester.py examples/users/tests_ollama.json http://localhost:8000
+python3 tester.py examples/pokeapi/tests_pokemon.json https://pokeapi.co
 ```

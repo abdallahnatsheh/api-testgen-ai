@@ -1,0 +1,658 @@
+[
+  {
+    "name": "Retrieve All Users Successfully",
+    "category": "functional",
+    "description": "Validates that the API returns a 200 OK status and a JSON array of users.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Verify Response Top-Level Structure",
+    "category": "functional",
+    "description": "Ensures the response contains the top-level 'users' array and 'count' integer keys.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "count",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array"
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Verify User Array Content and Item Structure",
+    "category": "functional",
+    "description": "Checks that the 'users' array contains exactly 3 items, each with 'id', 'name', and 'email' fields.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "email"
+              ]
+            }
+          },
+          "count": {
+            "type": "integer",
+            "enum": [
+              3
+            ]
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Attempt POST to Users Endpoint",
+    "category": "negative",
+    "description": "Verifies that attempting to use a POST method on the GET-only /users endpoint results in a 405 Method Not Allowed.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/users",
+      "payload": {},
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt DELETE to Users Endpoint",
+    "category": "negative",
+    "description": "Verifies that attempting to use a DELETE method on the GET-only /users endpoint results in a 405 Method Not Allowed.",
+    "input": {
+      "method": "DELETE",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Request Non-Existent Endpoint",
+    "category": "negative",
+    "description": "Ensures that requesting a non-existent path returns a 404 Not Found status.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/nonexistent-path",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Endpoint with Trailing Slash",
+    "category": "edge_case",
+    "description": "Tests if the API correctly handles a request to '/users/' (with a trailing slash) as equivalent to '/users'.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array"
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Endpoint with Unsupported Query Parameter",
+    "category": "edge_case",
+    "description": "Verifies that the API ignores an unknown query parameter and still returns all users.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users?invalid_param=value",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array"
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Retrieve existing user by ID 1",
+    "category": "functional",
+    "description": "Verifies that an existing user can be retrieved successfully using a valid numeric ID.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/1",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Retrieve another existing user by ID 2",
+    "category": "functional",
+    "description": "Verifies that another existing user can be retrieved successfully using a different valid numeric ID.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/2",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Attempt to retrieve non-existent user",
+    "category": "negative",
+    "description": "Verifies that requesting a user with an unknown numeric ID returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/999",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to retrieve user with very large unknown ID",
+    "category": "negative",
+    "description": "Verifies that requesting a user with a very large, but unknown, numeric ID returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/999999999999999999",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to retrieve user with non-numeric ID string",
+    "category": "validation",
+    "description": "Verifies that requesting a user with a non-numeric ID string returns a 422 Unprocessable Entity error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/abc",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to retrieve user with non-numeric ID containing special characters",
+    "category": "validation",
+    "description": "Verifies that requesting a user with a non-numeric ID containing special characters returns a 422 Unprocessable Entity error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/!@#",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to retrieve user with ID zero",
+    "category": "edge_case",
+    "description": "Verifies that requesting a user with ID 0, which is numeric but not a valid user ID, returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/0",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to retrieve user with negative ID",
+    "category": "edge_case",
+    "description": "Verifies that requesting a user with a negative numeric ID, which is not a valid user ID, returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users/-1",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Successful login with valid credentials (alice)",
+    "category": "functional",
+    "description": "Validates successful authentication with correct email and password.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "alice@example.com",
+        "password": "password123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Successful login with alternative valid credentials (bob)",
+    "category": "functional",
+    "description": "Validates successful authentication with another set of correct email and password.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "bob@example.com",
+        "password": "securepass"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Login with incorrect password",
+    "category": "negative",
+    "description": "Verifies that login fails with a 401 status for an incorrect password.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "alice@example.com",
+        "password": "wrongpassword"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Login with locked account (known bug)",
+    "category": "negative",
+    "description": "Tests login for a locked account, asserting the current buggy behavior of returning 200.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "locked@example.com",
+        "password": "anypassword"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Login with missing email field",
+    "category": "validation",
+    "description": "Ensures the API rejects requests missing the required 'email' field with a 422 status.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "password": "password123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Login with missing password field",
+    "category": "validation",
+    "description": "Ensures the API rejects requests missing the required 'password' field with a 422 status.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "alice@example.com"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 422,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Login with empty email string",
+    "category": "edge_case",
+    "description": "Verifies that an empty email string results in a 400 error with a specific message.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "",
+        "password": "password123"
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Login with empty password string",
+    "category": "edge_case",
+    "description": "Verifies that an empty password string results in a 400 error with a specific message.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "alice@example.com",
+        "password": ""
+      },
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  }
+]

@@ -8,3 +8,4 @@ openai
 json-repair
 jsonschema
 pytest
+pyyaml

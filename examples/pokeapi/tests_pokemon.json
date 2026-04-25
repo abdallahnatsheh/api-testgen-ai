@@ -1,0 +1,753 @@
+[
+  {
+    "name": "Get Pikachu by name",
+    "category": "functional",
+    "description": "Validates successful retrieval of Pok\u00e9mon data for 'pikachu' by name.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/pikachu",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_experience": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "integer"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ability": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "is_hidden": {
+                  "type": "boolean"
+                },
+                "slot": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base_stat": {
+                  "type": "integer"
+                },
+                "effort": {
+                  "type": "integer"
+                },
+                "stat": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sprites": {
+            "type": "object",
+            "properties": {
+              "front_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "front_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "species": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cries": {
+            "type": "object",
+            "properties": {
+              "latest": {
+                "type": "string"
+              },
+              "legacy": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "base_experience",
+          "height",
+          "weight",
+          "is_default",
+          "order",
+          "abilities",
+          "types",
+          "stats",
+          "sprites",
+          "species",
+          "forms",
+          "moves",
+          "cries"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Get Charizard by name",
+    "category": "functional",
+    "description": "Validates successful retrieval of Pok\u00e9mon data for 'charizard' by name.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/charizard",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_experience": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "integer"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ability": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "is_hidden": {
+                  "type": "boolean"
+                },
+                "slot": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base_stat": {
+                  "type": "integer"
+                },
+                "effort": {
+                  "type": "integer"
+                },
+                "stat": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sprites": {
+            "type": "object",
+            "properties": {
+              "front_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "front_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "species": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cries": {
+            "type": "object",
+            "properties": {
+              "latest": {
+                "type": "string"
+              },
+              "legacy": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "base_experience",
+          "height",
+          "weight",
+          "is_default",
+          "order",
+          "abilities",
+          "types",
+          "stats",
+          "sprites",
+          "species",
+          "forms",
+          "moves",
+          "cries"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Get Bulbasaur by numeric ID",
+    "category": "functional",
+    "description": "Validates successful retrieval of Pok\u00e9mon data for 'bulbasaur' by numeric ID.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/1",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_experience": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "integer"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ability": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "is_hidden": {
+                  "type": "boolean"
+                },
+                "slot": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "base_stat": {
+                  "type": "integer"
+                },
+                "effort": {
+                  "type": "integer"
+                },
+                "stat": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sprites": {
+            "type": "object",
+            "properties": {
+              "front_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_default": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "front_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "back_shiny": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "species": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cries": {
+            "type": "object",
+            "properties": {
+              "latest": {
+                "type": "string"
+              },
+              "legacy": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "base_experience",
+          "height",
+          "weight",
+          "is_default",
+          "order",
+          "abilities",
+          "types",
+          "stats",
+          "sprites",
+          "species",
+          "forms",
+          "moves",
+          "cries"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Get non-existent Pok\u00e9mon by name",
+    "category": "negative",
+    "description": "Verifies that requesting a non-existent Pok\u00e9mon by name returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/unknownxyz",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get non-existent Pok\u00e9mon by ID",
+    "category": "negative",
+    "description": "Verifies that requesting a non-existent Pok\u00e9mon by a very high numeric ID returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/9999999",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt POST on GET endpoint",
+    "category": "negative",
+    "description": "Verifies that using the POST method on a GET-only endpoint returns a 404 Not Found error as specified.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/api/v2/pokemon/pikachu",
+      "payload": {},
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt PUT on GET endpoint",
+    "category": "negative",
+    "description": "Verifies that using the PUT method on a GET-only endpoint returns a 404 Not Found error as specified.",
+    "input": {
+      "method": "PUT",
+      "endpoint": "/api/v2/pokemon/pikachu",
+      "payload": {},
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get Pok\u00e9mon with invalid characters in name",
+    "category": "validation",
+    "description": "Verifies that requesting a Pok\u00e9mon with invalid characters in its name returns a 400 Bad Request error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/pika chu!",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get Pok\u00e9mon with empty name string",
+    "category": "validation",
+    "description": "Verifies that requesting a Pok\u00e9mon with an empty string as its name returns a 400 Bad Request error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 400,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get Pok\u00e9mon with ID 0",
+    "category": "edge_case",
+    "description": "Verifies that requesting a Pok\u00e9mon with ID 0, which is typically invalid, returns a 404 Not Found error.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/api/v2/pokemon/0",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 404,
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  }
+]

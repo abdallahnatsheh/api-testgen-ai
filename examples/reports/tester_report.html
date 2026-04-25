@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Test Report</title>
+<style>
+  body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; margin: 0; padding: 0; background: #f8fafc; color: #1e293b; }
+  header { background: #1e293b; color: #f1f5f9; padding: 20px 32px; font-size: 1.4rem; font-weight: 700; }
+  .summary { display: flex; gap: 24px; padding: 16px 32px; background: #fff; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
+  .summary span { font-weight: 700; }
+  .pass { color: #16a34a; } .fail { color: #dc2626; } .err { color: #ea580c; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f1f5f9; text-align: left; padding: 10px 16px; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; }
+  td { padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: top; }
+  tr:hover td { background: #f8fafc; }
+  .row-pass td:first-child { border-left: 3px solid #16a34a; }
+  .row-fail td:first-child { border-left: 3px solid #dc2626; }
+  .row-err  td:first-child { border-left: 3px solid #ea580c; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+  .badge-pass { background: #dcfce7; color: #16a34a; }
+  .badge-fail { background: #fee2e2; color: #dc2626; }
+  .badge-err  { background: #ffedd5; color: #ea580c; }
+  .reason { color: #dc2626; font-size: 13px; margin-top: 4px; }
+  .dim { color: #94a3b8; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>API Test Report — http://localhost:8000</header>
+<div class="summary">
+  <div>Total: <span>11</span></div>
+  <div class="pass">Passed: <span>10</span></div>
+  <div class="fail">Failed: <span>1</span></div>
+</div>
+<table>
+  <thead><tr><th>#</th><th>Test</th><th>Request</th><th>Status</th><th>Duration</th><th>Result</th></tr></thead>
+  <tbody><tr class="row-pass">
+  <td class="dim">1</td>
+  <td><strong>Valid admin login</strong><br><span class="dim">functional · Valid admin credentials should return 200 with a token.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">200</td>
+  <td class="dim">5 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">2</td>
+  <td><strong>Valid user login</strong><br><span class="dim">functional · Valid user credentials should return 200 with a token.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">200</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">3</td>
+  <td><strong>Wrong password</strong><br><span class="dim">negative · Correct email but wrong password should return 401.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">401</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">4</td>
+  <td><strong>Unknown email</strong><br><span class="dim">negative · Email not registered in the system should return 404.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">404</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-fail">
+  <td class="dim">5</td>
+  <td><strong>Locked account</strong><br><span class="dim">negative · Locked account should return 403 regardless of password.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">200</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-fail">FAIL</span><div class="reason">expected status 403, got 200, expected detail='Account is locked', got 'Welcome!'</div></td>
+</tr><tr class="row-pass">
+  <td class="dim">6</td>
+  <td><strong>Missing email field</strong><br><span class="dim">validation · Missing email field should trigger Pydantic validation and return 422.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">422</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">7</td>
+  <td><strong>Missing password field</strong><br><span class="dim">validation · Missing password field should trigger Pydantic validation and return 422.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">422</td>
+  <td class="dim">1 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">8</td>
+  <td><strong>Empty email string</strong><br><span class="dim">validation · Empty email string is caught by app logic and returns 400.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">400</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">9</td>
+  <td><strong>Empty password string</strong><br><span class="dim">validation · Empty password string is caught by app logic and returns 400.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">400</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">10</td>
+  <td><strong>Extra field in payload</strong><br><span class="dim">edge_case · Extra fields in the payload are silently ignored — should return 200.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">200</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr><tr class="row-pass">
+  <td class="dim">11</td>
+  <td><strong>Uppercase email</strong><br><span class="dim">edge_case · Email matching is case-sensitive — ADMIN@example.com is not found.</span></td>
+  <td class="dim">POST /login</td>
+  <td class="dim">404</td>
+  <td class="dim">2 ms</td>
+  <td><span class="badge badge-pass">PASS</span></td>
+</tr></tbody>
+</table>
+</body>
+</html>

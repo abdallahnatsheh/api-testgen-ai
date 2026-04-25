@@ -1,4 +1,7 @@
 settings.json
+test_run.log
+*.html
+!examples/reports/*.html
 __pycache__/
 *.pyc
 *.pyo

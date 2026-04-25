@@ -1,0 +1,17 @@
+body { font-size: 16px; background: #0f1117; color: #e2e8f0; }
+
+h1 { font-size: 1.6rem; background: #1e293b; color: #f1f5f9; }
+
+table { font-size: 15px; }
+
+th { font-size: 13px; background: #1e293b; color: #94a3b8; }
+
+td { font-size: 14px; }
+
+.passed { color: #22c55e; font-weight: 700; }
+.failed { color: #ef4444; font-weight: 700; }
+.error  { color: #f97316; font-weight: 700; }
+
+.summary { background: #1e293b; font-size: 15px; }
+
+.log { background: #0f172a; color: #94a3b8; font-size: 13px; border: 1px solid #334155; border-radius: 4px; }

@@ -9,3 +9,4 @@ json-repair
 jsonschema
 pytest
 pyyaml
+pytest-html

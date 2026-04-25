@@ -16,6 +16,7 @@ A CLI tool that uses AI to automatically generate and execute API test cases. Su
 - **Deeper assertions** — response time thresholds (`max_response_time_ms`), response header checks, and full JSON Schema validation of the response body
 - **Input validation & normalization** — invalid AI output is auto-corrected or skipped; never crashes on bad AI JSON
 - **Two test runners**: colored CLI (`tester.py`) and pytest (`tests/`) for CI/CD pipelines
+- **HTML reports** — `--html=report.html --self-contained-html` generates a portable single-file report with a dark theme UI via pytest-html (custom CSS auto-applied)
 - **CI/CD ready** — GitHub Actions workflow included; `--dry-run` flag validates test files without a live server
 - **Debug logging** — full debug log written to `test_run.log` on every run
 - Saves settings (provider, model, API key) so you only configure once
@@ -278,11 +279,16 @@ pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://loc
 # Output JUnit XML for CI pipelines
 pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 --junit-xml=results.xml
 
+# Generate HTML report (dark theme auto-applied, self-contained, opens in any browser)
+pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 --html=report.html --self-contained-html
+
 # With Bearer token
 pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=https://api.example.com --bearer <token> -v
 ```
 
 Each JSON test case becomes a named pytest test — failures show exact status codes and missing keys.
+
+The `--html=report.html --self-contained-html` flags generate a single portable HTML file with all results embedded — dark theme CSS is applied automatically via `pytest.ini`, no extra flags needed.
 
 ---
 

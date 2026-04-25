@@ -6,4 +6,5 @@ pydantic
 google-genai
 openai
 json-repair
+jsonschema
 pytest

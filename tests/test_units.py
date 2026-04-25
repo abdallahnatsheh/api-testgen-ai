@@ -84,6 +84,83 @@ class TestModels:
         assert isinstance(tc.input.payload, dict)
         assert tc.input.payload["email"] == "a@b.com"
 
+    # --- ExpectedResult new fields ---
+
+    def test_contains_value_string_coerced_to_none(self):
+        """AI sometimes returns a string instead of a dict for contains_value."""
+        tc = TestCase.model_validate({
+            "name": "t", "category": "negative", "description": "d",
+            "input": {"method": "POST", "endpoint": "/login", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 401, "contains_value": "Invalid password"}
+        })
+        assert tc.expected_result.contains_value is None
+
+    def test_contains_value_list_coerced_to_none(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "negative", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "contains_value": ["item1", "item2"]}
+        })
+        assert tc.expected_result.contains_value is None
+
+    def test_contains_value_dict_kept(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "contains_value": {"role": "admin"}}
+        })
+        assert tc.expected_result.contains_value == {"role": "admin"}
+
+    def test_response_headers_string_coerced_to_none(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "response_headers": "application/json"}
+        })
+        assert tc.expected_result.response_headers is None
+
+    def test_response_headers_dict_kept(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "response_headers": {"Content-Type": "application/json"}}
+        })
+        assert tc.expected_result.response_headers == {"Content-Type": "application/json"}
+
+    def test_response_schema_bool_coerced_to_none(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "response_schema": True}
+        })
+        assert tc.expected_result.response_schema is None
+
+    def test_response_schema_dict_kept(self):
+        schema = {"type": "object", "properties": {"id": {"type": "integer"}}}
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users/1", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "response_schema": schema}
+        })
+        assert tc.expected_result.response_schema == schema
+
+    def test_max_response_time_float_coerced_to_int(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "max_response_time_ms": 2000.0}
+        })
+        assert tc.expected_result.max_response_time_ms == 2000
+        assert isinstance(tc.expected_result.max_response_time_ms, int)
+
+    def test_max_response_time_string_digit_coerced_to_int(self):
+        tc = TestCase.model_validate({
+            "name": "t", "category": "functional", "description": "d",
+            "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+            "expected_result": {"status_code": 200, "max_response_time_ms": "3000"}
+        })
+        assert tc.expected_result.max_response_time_ms == 3000
+
 
 # ---------------------------------------------------------------------------
 # tester.py helpers

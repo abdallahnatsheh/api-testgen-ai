@@ -1,0 +1,257 @@
+[
+  {
+    "name": "Get all users successfully",
+    "category": "functional",
+    "description": "Validates that GET /users returns a 200 OK status and the correct list of users and count.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "admin",
+                    "user"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "email",
+                "role"
+              ]
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "count": {
+            "type": "integer",
+            "const": 3
+          }
+        },
+        "required": [
+          "users",
+          "count"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Verify exact user data and order",
+    "category": "functional",
+    "description": "Ensures the response contains the predefined static list of users in the correct order and with accurate details.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "users": [
+          {
+            "id": 1,
+            "name": "Alice",
+            "email": "alice@example.com",
+            "role": "admin"
+          },
+          {
+            "id": 2,
+            "name": "Bob",
+            "email": "bob@example.com",
+            "role": "user"
+          },
+          {
+            "id": 3,
+            "name": "Carol",
+            "email": "carol@example.com",
+            "role": "user"
+          }
+        ]
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to create user with POST method",
+    "category": "negative",
+    "description": "Verifies that using the POST method on /users returns a 405 Method Not Allowed error.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/users",
+      "payload": {
+        "name": "New User",
+        "email": "new@example.com",
+        "role": "user"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": {
+        "detail": "Method Not Allowed"
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to update users with PUT method",
+    "category": "negative",
+    "description": "Verifies that using the PUT method on /users returns a 405 Method Not Allowed error.",
+    "input": {
+      "method": "PUT",
+      "endpoint": "/users",
+      "payload": {
+        "id": 1,
+        "name": "Updated Alice"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": {
+        "detail": "Method Not Allowed"
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Attempt to delete users with DELETE method",
+    "category": "negative",
+    "description": "Verifies that using the DELETE method on /users returns a 405 Method Not Allowed error.",
+    "input": {
+      "method": "DELETE",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 405,
+      "contains_key": "detail",
+      "contains_value": {
+        "detail": "Method Not Allowed"
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": null,
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Validate 'count' field value",
+    "category": "validation",
+    "description": "Ensures the 'count' field in the response body always has the value 3.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "count",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Request with ignored query parameters",
+    "category": "edge_case",
+    "description": "Verifies that query parameters are silently ignored and the API still returns all users.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users?page=1&limit=10&search=Alice",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Request with custom headers",
+    "category": "edge_case",
+    "description": "Verifies that custom or unknown headers do not affect the successful retrieval of users.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/users",
+      "payload": null,
+      "headers": {
+        "X-Custom-Header": "test-value",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "users",
+      "contains_value": {
+        "count": 3
+      },
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  }
+]

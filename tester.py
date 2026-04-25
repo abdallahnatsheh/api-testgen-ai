@@ -1,7 +1,9 @@
 import json
 import logging
 import sys
+import time
 
+import jsonschema
 import requests
 
 from colors import (BOLD, CYAN, DIM, GREEN, RED, RESET, YELLOW,
@@ -66,6 +68,7 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
         merged_headers = {**global_headers, **tc.input.headers}
 
         try:
+            t0 = time.monotonic()
             resp = requests.request(
                 method=tc.input.method,
                 url=url,
@@ -73,6 +76,7 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                 headers=merged_headers,
                 timeout=5,
             )
+            elapsed_ms = (time.monotonic() - t0) * 1000
 
             try:
                 body = resp.json()
@@ -81,7 +85,7 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                 body = None
                 body_str = resp.text or "—"
 
-            print(f"    {CYAN}← RESPONSE{RESET} {resp.status_code} {resp.reason}")
+            print(f"    {CYAN}← RESPONSE{RESET} {resp.status_code} {resp.reason}  {DIM}({elapsed_ms:.0f}ms){RESET}")
             print(f"    {CYAN}  Body     {RESET} {_truncate(body_str)}")
 
             status_ok = resp.status_code == tc.expected_result.status_code
@@ -103,7 +107,30 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                         value_fail_reason = f"expected {k}={expected!r}, got {actual!r}"
                         break
 
-            ok = status_ok and key_ok and value_ok
+            time_ok = True
+            if tc.expected_result.max_response_time_ms is not None:
+                time_ok = elapsed_ms <= tc.expected_result.max_response_time_ms
+
+            headers_ok = True
+            headers_fail_reason = ""
+            if tc.expected_result.response_headers:
+                for h_key, h_expected in tc.expected_result.response_headers.items():
+                    h_actual = resp.headers.get(h_key, "")
+                    if h_expected.lower() not in h_actual.lower():
+                        headers_ok = False
+                        headers_fail_reason = f"header '{h_key}': expected {h_expected!r}, got {h_actual!r}"
+                        break
+
+            schema_ok = True
+            schema_fail_reason = ""
+            if tc.expected_result.response_schema and body is not None:
+                try:
+                    jsonschema.validate(instance=body, schema=tc.expected_result.response_schema)
+                except jsonschema.ValidationError as e:
+                    schema_ok = False
+                    schema_fail_reason = e.message
+
+            ok = status_ok and key_ok and value_ok and time_ok and headers_ok and schema_ok
 
             if ok:
                 passed += 1
@@ -121,9 +148,20 @@ def run_tests(test_cases: list[TestCase], base_url: str, global_headers: dict | 
                     )
                 if not value_ok:
                     reason_parts.append(value_fail_reason)
+                if not time_ok:
+                    reason_parts.append(
+                        f"response took {elapsed_ms:.0f}ms, limit {tc.expected_result.max_response_time_ms}ms"
+                    )
+                if not headers_ok:
+                    reason_parts.append(headers_fail_reason)
+                if not schema_ok:
+                    reason_parts.append(f"schema: {schema_fail_reason}")
                 verdict = f"{RED}✗ FAIL{RESET}  ({', '.join(reason_parts)})"
 
-            logger.debug("Test '%s': status=%d key_ok=%s", tc.name, resp.status_code, key_ok)
+            logger.debug(
+                "Test '%s': status=%d key_ok=%s time=%.0fms",
+                tc.name, resp.status_code, key_ok, elapsed_ms,
+            )
 
         except requests.exceptions.ConnectionError:
             failed += 1

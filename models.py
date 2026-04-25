@@ -58,13 +58,34 @@ class TestInput(BaseModel):
 class ExpectedResult(BaseModel):
     status_code: int
     contains_key: str | None = None
-    contains_value: dict | None = None  # e.g. {"key": "expected_value"}
+    contains_value: dict | None = None      # e.g. {"key": "expected_value"}
+    max_response_time_ms: int | None = None # e.g. 2000
+    response_headers: dict | None = None    # e.g. {"Content-Type": "application/json"}
+    response_schema: dict | None = None     # JSON Schema object to validate the body
 
     @field_validator("status_code")
     @classmethod
     def valid_status_code(cls, v):
         if not (100 <= v <= 599):
             raise ValueError(f"invalid HTTP status code: {v}")
+        return v
+
+    @field_validator("contains_value", "response_headers", "response_schema", mode="before")
+    @classmethod
+    def coerce_dict_fields(cls, v):
+        # AI sometimes returns a string or list instead of a dict — discard rather than crash
+        if isinstance(v, (str, list, bool)):
+            return None
+        return v
+
+    @field_validator("max_response_time_ms", mode="before")
+    @classmethod
+    def coerce_response_time(cls, v):
+        # AI sometimes returns a float or string — coerce to int
+        if isinstance(v, float):
+            return int(v)
+        if isinstance(v, str) and v.isdigit():
+            return int(v)
         return v
 
 

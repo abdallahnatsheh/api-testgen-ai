@@ -1,0 +1,158 @@
+openapi: "3.0.3"
+info:
+  title: API Testgen Sample API
+  version: "1.0.0"
+  description: Sample FastAPI server used for demonstrating the AI test generator.
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /users:
+    get:
+      summary: List all users
+      description: >
+        Returns an array of all users. Each user has id (int), name (str), and email (str).
+        Always returns 200 with a JSON array. The array contains exactly 3 users.
+        Response includes a top-level "users" key with the array and a "count" key with the total.
+      operationId: listUsers
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Alice
+                        email:
+                          type: string
+                          example: alice@example.com
+                  count:
+                    type: integer
+                    example: 3
+
+  /users/{user_id}:
+    get:
+      summary: Get user by ID
+      description: >
+        Returns a single user by numeric ID. Valid IDs are 1, 2, 3.
+        Returns 200 with user object (id, name, email) for valid IDs.
+        Returns 404 with {"detail": "User not found"} for unknown IDs.
+        Returns 422 for non-numeric user_id values.
+      operationId: getUser
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: User not found
+        "422":
+          description: Invalid user_id type
+
+  /login:
+    post:
+      summary: User login
+      description: >
+        Authenticates a user with email and password.
+        Returns 200 with {"token": "<jwt>"} on success.
+        Returns 401 with {"detail": "Invalid credentials"} for wrong password.
+        Returns 403 with {"detail": "Account locked"} for locked@example.com.
+        Returns 422 for missing email or password fields.
+        Returns 400 with {"detail": "Email is required"} for empty email string.
+        Returns 400 with {"detail": "Password is required"} for empty password string.
+        Known valid credentials: alice@example.com / password123, bob@example.com / securepass.
+        Known locked account: locked@example.com (any password returns 403, but currently returns 200 — this is a known bug).
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: alice@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        "400":
+          description: Empty email or password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Invalid credentials
+        "403":
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Account locked
+        "422":
+          description: Missing required fields

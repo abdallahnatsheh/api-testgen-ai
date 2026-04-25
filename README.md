@@ -9,6 +9,7 @@ A CLI tool that uses AI to automatically generate and execute API test cases. Su
 - AI-generated test cases covering 4 categories: **Functional**, **Negative**, **Edge Cases**, **Validation**
 - **4 AI providers**: Google Gemini (free), Anthropic Claude, OpenAI, Ollama (local)
 - **Postman collection import** — point the tool at a `.json` Postman collection and generate tests for every request automatically
+- **OpenAPI/Swagger import** — point the tool at an OpenAPI 3.x or Swagger 2.x spec (`.yaml` or `.json`) and generate tests for every operation automatically
 - **Description file support** — load a `.md` file describing your API so the AI generates accurate tests instead of guessing
 - **Configurable test count** — request an exact number of test cases or use the default (8–12)
 - **`contains_value` assertions** — assert a specific key-value pair in the response body (e.g. `{"count": 3}`)
@@ -178,6 +179,26 @@ A sample collection is included at `examples/postman/api-testgen-sample.postman_
 
 ---
 
+### Import an OpenAPI/Swagger spec
+
+Use `--openapi` to generate tests from an OpenAPI 3.x or Swagger 2.x spec:
+
+```bash
+python3 main.py --openapi examples/openapi/api-testgen-sample.yaml
+```
+
+The tool reads all operations from the spec, extracts the base URL from `servers[0].url`, and generates test cases for each endpoint. You will always be prompted for a description — spec descriptions alone are rarely detailed enough for accurate test generation.
+
+Use `--base-url` to override the server URL from the spec:
+
+```bash
+python3 main.py --openapi spec.yaml --base-url http://staging.example.com
+```
+
+A sample spec and generated test files are included at `examples/openapi/`.
+
+---
+
 ### Non-interactive mode (CLI args)
 
 Skip all prompts by passing arguments directly:
@@ -200,6 +221,16 @@ python3 main.py \
   --provider gemini \
   --api-key $GEMINI_API_KEY \
   --description examples/login/description.md \
+  --count 8 \
+  --save tests.json \
+  --run
+
+# OpenAPI/Swagger spec
+python3 main.py \
+  --openapi examples/openapi/api-testgen-sample.yaml \
+  --description examples/openapi/description.md \
+  --provider gemini \
+  --api-key $GEMINI_API_KEY \
   --count 8 \
   --save tests.json \
   --run

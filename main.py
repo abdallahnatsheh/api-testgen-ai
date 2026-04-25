@@ -11,6 +11,7 @@ from colors import (BOLD, CYAN, DIM, GREEN, RED, RESET, YELLOW,
                     CATEGORY_COLOR, CATEGORY_LABEL)
 from models import TestCase
 from postman_importer import load_collection
+from openapi_importer import load_spec
 from tester import run_tests
 
 SETTINGS_FILE = "settings.json"
@@ -372,6 +373,7 @@ def _parse_args():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--url", metavar="URL", help="Full endpoint URL  (e.g. http://localhost:8000/login)")
     group.add_argument("--postman", metavar="FILE", help="Postman collection JSON file")
+    group.add_argument("--openapi", metavar="FILE", help="OpenAPI/Swagger spec file (.yaml or .json)")
 
     parser.add_argument("--method", metavar="METHOD", default="GET", help="HTTP method (default: GET)")
     parser.add_argument("--base-url", metavar="URL", help="Base URL for Postman import  (e.g. http://localhost:8000)")
@@ -417,7 +419,7 @@ def _load_description_from_file(path: str) -> str | None:
 def main() -> None:
     _setup_logging()
     args = _parse_args()
-    non_interactive = bool(args.url or args.postman)
+    non_interactive = bool(args.url or args.postman or args.openapi)
 
     print(f"  {DIM}Detailed logs → test_run.log{RESET}\n")
 
@@ -444,6 +446,55 @@ def main() -> None:
 
     if args.description:
         description = _load_description_from_file(args.description)
+
+    # --- OpenAPI mode ---
+    if args.openapi:
+        try:
+            spec_base_url, openapi_requests = load_spec(args.openapi)
+        except Exception as e:
+            print(f"  {RED}Failed to load spec: {e}{RESET}\n")
+            sys.exit(1)
+
+        base_url = args.base_url or spec_base_url
+        if not description:
+            description = _load_description()
+        if not auth_headers and not non_interactive:
+            auth_headers = _collect_auth()
+
+        print(f"\n  {GREEN}✓ Loaded {len(openapi_requests)} operations from spec{RESET}")
+        print(f"  {DIM}Base URL: {base_url}{RESET}\n")
+        all_test_cases: list[TestCase] = []
+
+        for req in openapi_requests:
+            op_description = description or req.description
+            print(f"  {CYAN}Generating tests for:{RESET} {req.method} {req.path}  {DIM}({req.name}){RESET}")
+            try:
+                tcs = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, op_description, count)
+                all_test_cases.extend(tcs)
+                print(f"  {GREEN}✓ {len(tcs)} test cases generated{RESET}\n")
+            except Exception as e:
+                logger.error("Generation failed for %s %s: %s", req.method, req.path, e)
+                print(f"  {RED}✗ Failed: {e}{RESET}\n")
+
+        if not all_test_cases:
+            print(f"  {RED}No test cases generated. Exiting.{RESET}\n")
+            sys.exit(1)
+
+        print_test_cases(all_test_cases)
+        _flush_stdin()
+
+        if args.save:
+            with open(args.save, "w") as f:
+                json.dump([tc.model_dump() for tc in all_test_cases], f, indent=2)
+            print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
+        elif _prompt("Save all test cases to file? (y/n)").lower() == "y":
+            save_test_cases(all_test_cases)
+
+        if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
+            run_tests(all_test_cases, base_url, global_headers=auth_headers)
+        else:
+            print(f"\n  Done. Test cases generated but not executed.\n")
+        return
 
     # --- Postman mode ---
     if args.postman:

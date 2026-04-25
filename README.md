@@ -261,6 +261,9 @@ python3 tester.py examples/login/tests_gemini.json https://api.example.com --bea
 
 # With custom header
 python3 tester.py examples/login/tests_gemini.json https://api.example.com --header "X-API-Key=abc123"
+
+# With HTML report
+python3 tester.py examples/login/tests_gemini.json http://localhost:8000 --html report.html
 ```
 
 Exits with code `0` if all tests pass, non-zero if any fail — CI/CD safe.

@@ -19,6 +19,7 @@ python3 main.py --help                                        # show all CLI arg
 python3 tester.py <file.json> <base_url>                      # CLI runner standalone
 python3 tester.py <file.json> <base_url> --bearer <token>     # with Bearer auth
 python3 tester.py <file.json> <base_url> --header X-API-Key=x # with custom header
+python3 tester.py <file.json> <base_url> --html report.html   # with HTML report
 pytest tests/ --test-file=<file.json> --base-url=<url> -v     # pytest runner
 pytest tests/ --test-file=<file.json> --base-url=<url> --junit-xml=results.xml  # CI output
 pytest tests/ --test-file=<file.json> --base-url=<url> --html=report.html --self-contained-html  # styled HTML report (CSS auto-applied via pytest.ini)

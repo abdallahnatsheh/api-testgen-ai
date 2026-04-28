@@ -2,74 +2,49 @@
 
 ## Adding a new AI provider
 
-1. Add the provider config to `PROVIDERS` in `ai_client.py`:
+1. Add config to `PROVIDERS` in `ai_client.py`:
 ```python
 "myprovider": {
     "label": "My Provider",
-    "env_key": "MYPROVIDER_API_KEY",   # set "" for local providers
-    "models": {
-        "1": ("model-id", "Model Name — description"),
-    },
-    "default_model": "model-id",
+    "env_key": "MYPROVIDER_API_KEY",  # "" for local providers
+    "models": { "1": ("model-id", "Model Name") },
 }
 ```
-
-2. Add a `_call_myprovider(user_message)` function that returns `list[TestCase]` via `_parse_response()`. Use `temperature=0.3` for consistent output. See `_call_ollama()` as the simplest reference (OpenAI-compatible client).
-
-3. Add the provider to the menu in `main.py` → `select_provider()`.
-
-4. If the provider needs no API key (e.g. local), add it to the `if provider == "ollama":` branch that sets `api_key` without prompting.
+2. Add `_call_myprovider(user_message) -> list[TestCase]` — use `_parse_response()`, `temperature=0.3`. See `_call_ollama()` as reference.
+3. Add to `select_provider()` in `main.py`.
+4. If no API key needed, add to the `if provider == "ollama":` branch.
 
 ## Adding a new Ollama model
 
-Add an entry to the `"ollama"` → `"models"` dict in `ai_client.py`. Only include models verified to produce valid JSON output for API test generation. Prefer instruction-tuned coding models.
+Add to the `"ollama"` → `"models"` dict in `ai_client.py`. Only include models verified to produce valid JSON for test generation.
 
-## Adding new test assertions
+## Adding a new test assertion
 
-Both runners check `status_code` and `contains_key`. To add more assertion types (e.g. response body value matching):
-1. Extend `ExpectedResult` in `models.py`
-2. Update the assertion block in `tester.py` → `run_tests()`
-3. Update the assertion block in `tests/test_api.py`
+1. Add field to `ExpectedResult` in `models.py`
+2. Add assertion logic in `tester.py` → `run_tests()`
+3. Add assertion logic in `tests/test_api.py`
 
-## Adding colors or display changes
+## Adding a new API endpoint
 
-All ANSI constants live in `colors.py`. Never redefine them in `main.py` or `tester.py` — always import from `colors`.
+1. Add route to `api.py` using `raise HTTPException(...)` for errors (never `return (dict, status)`)
+2. Add unit tests in `tests/test_api_server.py`
+3. Add example description + test cases in `examples/<endpoint>/`
 
-## Sample API
-
-`api.py` is intentionally simple — it exists only for local testing. It demonstrates:
-- JWT auth flow: `POST /login` returns a signed JWT; `GET /me` requires a Bearer token
-- Valid credentials: `alice@example.com` / `alice123`, `bob@example.com` / `bob123`, `carol@example.com` / `carol123`
-- Locked account bug (`locked@example.com` → 200 instead of 403, intentional regression demo)
-- FastAPI Pydantic validation (missing fields → 422)
-
-## Running the example test files
-
-```bash
-# CLI runner
-python3 tester.py examples/login/tests_gemini.json http://localhost:8000
-python3 tester.py examples/jsonplaceholder/tests_gemini.json https://jsonplaceholder.typicode.com
-
-# With auth flow (GET /me)
-python3 tester.py examples/me/tests_gemini.json http://localhost:8000 \
-  --auth-url http://localhost:8000/login \
-  --auth-payload '{"email":"alice@example.com","password":"alice123"}' \
-  --auth-token-path token
-
-# pytest runner
-pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 -v
-pytest tests/ --test-file=examples/jsonplaceholder/tests_gemini.json --base-url=https://jsonplaceholder.typicode.com -v
-
-# pytest with auth flow
-pytest tests/ --test-file=examples/me/tests_gemini.json --base-url=http://localhost:8000 \
-  --auth-url http://localhost:8000/login \
-  --auth-payload '{"email":"alice@example.com","password":"alice123"}' -v
-```
-
-## Style
+## Style rules
 
 - No comments unless the reason is non-obvious
 - No new dependencies without updating `requirements.txt`
-- Keep `models.py` as the single source of truth for the `TestCase` schema
-- All providers must go through `_parse_response()` — never parse AI output directly
-- `collect_inputs()` returns a `CollectedInput` dataclass — add new fields there, not as extra return values
+- All ANSI colors from `colors.py` — never redefine
+- All providers through `_parse_response()` — never parse AI output directly
+- `models.py` is the single source of truth for TestCase schema
+
+## Running examples
+
+```bash
+python3 api.py &
+python3 tester.py examples/login/tests_gemini.json http://localhost:8000
+python3 tester.py examples/me/tests_gemini.json http://localhost:8000 \
+  --auth-url http://localhost:8000/login \
+  --auth-payload '{"email":"alice@example.com","password":"alice123"}'
+pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 -v
+```

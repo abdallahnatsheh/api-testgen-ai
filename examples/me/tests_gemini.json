@@ -1,0 +1,181 @@
+[
+  {
+    "name": "Get User Profile - Valid Token",
+    "category": "functional",
+    "description": "Verify authenticated user's profile is returned with ID and email.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "id",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Get User Profile - No Authorization Header",
+    "category": "negative",
+    "description": "Verify request fails with 401 when Authorization header is missing or empty.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {
+        "Authorization": ""
+      }
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get User Profile - Invalid Token String",
+    "category": "negative",
+    "description": "Verify request fails with 401 when Authorization header contains a malformed token.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {
+        "Authorization": "Bearer thisisnotavalidtoken"
+      }
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get User Profile - Missing Bearer Prefix",
+    "category": "negative",
+    "description": "Verify request fails with 401 when Authorization header lacks 'Bearer ' prefix.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {
+        "Authorization": "justaplainstring"
+      }
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get User Profile - Empty Bearer Value",
+    "category": "validation",
+    "description": "Verify request fails with 401 when Authorization header has an empty Bearer token value.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {
+        "Authorization": "Bearer "
+      }
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get User Profile - Wrong Authorization Scheme",
+    "category": "validation",
+    "description": "Verify request fails with 401 when Authorization header uses an unsupported scheme.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {
+        "Authorization": "Token somevalue"
+      }
+    },
+    "expected_result": {
+      "status_code": 401,
+      "contains_key": "detail",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  },
+  {
+    "name": "Get User Profile - Verify Role Field",
+    "category": "edge_case",
+    "description": "Verify the 'role' field is present in the authenticated user's profile response.",
+    "input": {
+      "method": "GET",
+      "endpoint": "/me",
+      "payload": null,
+      "headers": {}
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "role",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
+    }
+  }
+]

@@ -425,11 +425,22 @@ def main() -> None:
 
     # Provider setup
     if non_interactive and args.provider:
+        settings = load_settings() or {}
         provider = args.provider
         model = args.model or list(PROVIDERS[provider]["models"].values())[0][0]
-        api_key = args.api_key or ("ollama" if provider == "ollama" else "")
+        api_key = args.api_key or ("ollama" if provider == "ollama" else settings.get("api_key", ""))
         if not api_key:
             print(f"  {RED}--api-key is required for {provider}{RESET}\n")
+            sys.exit(1)
+        ai_client.setup(provider, model, api_key)
+        provider_label = PROVIDERS[provider]["label"]
+    elif non_interactive and not args.provider:
+        settings = load_settings() or {}
+        provider = settings.get("provider", "")
+        model = settings.get("model", "")
+        api_key = settings.get("api_key", "")
+        if not provider or (not api_key and provider != "ollama"):
+            print(f"  {RED}No provider configured. Run interactively once or pass --provider + --api-key.{RESET}\n")
             sys.exit(1)
         ai_client.setup(provider, model, api_key)
         provider_label = PROVIDERS[provider]["label"]

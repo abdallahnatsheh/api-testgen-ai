@@ -1,4 +1,4 @@
-POST /login — authenticates a user and returns a JWT token.
+POST /login — authenticates a user and returns a signed JWT token.
 
 ## Request
 - Method: POST
@@ -8,36 +8,46 @@ POST /login — authenticates a user and returns a JWT token.
 
 ## Response codes and exact bodies
 
-| Scenario                          | Status | Body                                                      |
-|-----------------------------------|--------|-----------------------------------------------------------|
-| Valid credentials                 | 200    | `{"token": "fake-jwt-token-xyz", "email": "<email>"}`     |
-| Missing field (email or password) | 422    | `{"detail": [...]}` — FastAPI/Pydantic validation array   |
-| Empty string (email or password)  | 400    | `{"detail": "Email and password are required"}`           |
-| Email not registered              | 404    | `{"detail": "User not found"}`                            |
-| Wrong password (email exists)     | 401    | `{"detail": "Invalid password"}`                          |
-| Locked account                    | 403    | `{"detail": "Account is locked"}`                         |
+| Scenario                          | Status | Body                                                        |
+|-----------------------------------|--------|-------------------------------------------------------------|
+| Valid credentials                 | 200    | `{"token": "<JWT string>", "email": "<email>"}`             |
+| Missing field (email or password) | 422    | `{"detail": [...]}` — FastAPI/Pydantic validation array     |
+| Empty string (email or password)  | 400    | `{"detail": "Email and password are required"}`             |
+| Email not registered              | 404    | `{"detail": "User not found"}`                              |
+| Wrong password (email exists)     | 401    | `{"detail": "Invalid password"}`                            |
+| Locked account (BUG)              | 200    | `{"detail": "Welcome!"}` — BUG: returns 200 instead of 403 |
 
 ## Valid credentials (copy exactly — no variations)
-- `admin@example.com` / `admin123`
-- `user@example.com` / `user123`
+- `alice@example.com` / `alice123`
+- `bob@example.com` / `bob123`
+- `carol@example.com` / `carol123`
 
-## Locked account
-- `locked@example.com` / `locked123` → always returns 403 regardless of password
+## Locked account (known bug)
+- `locked@example.com` / `locked123`
+- BUG: returns HTTP 200 with body `{"detail": "Welcome!"}` instead of 403
+- The response does NOT contain a `token` key — it contains `detail`
+- Test must assert: status_code=200, contains_key="detail"
+
+## What the token looks like
+The `token` field is a real JWT string (three base64 segments separated by dots).
+- Use `contains_key: "token"` to assert the key exists on 200 responses
+- Do NOT assert `contains_key: "token"` for the locked account — its body has `detail`, not `token`
+- Do NOT hardcode the JWT token value in any assertion
 
 ## Strict matching rules
 - Email and password matching is EXACT: case-sensitive and whitespace-sensitive
-- `"ADMIN@example.com"` → 404 (not found, not 401)
-- `" admin@example.com "` (leading/trailing spaces) → 404
-- `"Admin123"` as password → 401 (wrong password, email exists)
+- `"ALICE@example.com"` → 404 (not found, not 401)
+- `" alice@example.com "` (leading/trailing spaces) → 404
+- `"Alice123"` as password → 401 (wrong password, email exists)
 - The API does NOT trim, normalise, or lowercase any input
-- The API does NOT validate email format — `"not_an_email"` is a valid string, just returns 404 if unknown
+- The API does NOT validate email format — `"not_an_email"` is valid input, returns 404 if unknown
 - The API does NOT enforce length limits
 
 ## What to test
 Generate a balanced mix across all 4 categories:
-- **functional**: happy path with each valid credential pair (expect 200 + `token` key)
-- **negative**: wrong password (401), unknown email (404), locked account (403)
-- **validation**: missing `email` field (422), missing `password` field (422), empty string email (400), empty string password (400)
-- **edge_case**: extra fields in payload (200), non-email string as email (404), numeric-only email (404), whitespace-padded email (404), whitespace-padded password (401), uppercase email (404), uppercase password (401)
+- **functional** (3 tests): happy path for alice, bob, carol — each expects status 200 and `contains_key: "token"`
+- **negative** (3 tests): wrong password → 401, unknown email → 404, locked account → 200 with `contains_key: "detail"` (NOT "token")
+- **validation** (4 tests): missing `email` → 422, missing `password` → 422, empty string email → 400, empty string password → 400
+- **edge_case** (2 tests): extra fields in payload → 200, uppercase email → 404
 
-Do NOT generate tests that assume the API normalises or trims input.
+Do NOT generate tests that assume the API trims or normalises input.

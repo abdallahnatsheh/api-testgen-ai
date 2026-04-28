@@ -10,3 +10,4 @@ jsonschema
 pytest
 pyyaml
 pytest-html
+PyJWT

@@ -1,178 +1,370 @@
 [
   {
-    "name": "Valid admin login",
+    "name": "Successful login with Alice's credentials",
     "category": "functional",
-    "description": "Valid admin credentials should return 200 with a token.",
+    "description": "Validates that Alice can log in successfully and receives a JWT token and her email.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "admin@example.com", "password": "admin123" },
-      "headers": {}
+      "payload": {
+        "email": "alice@example.com",
+        "password": "alice123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 200,
       "contains_key": "token",
-      "contains_value": { "email": "admin@example.com" }
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "email"
+        ]
+      }
     }
   },
   {
-    "name": "Valid user login",
+    "name": "Successful login with Bob's credentials",
     "category": "functional",
-    "description": "Valid user credentials should return 200 with a token.",
+    "description": "Validates that Bob can log in successfully and receives a JWT token and his email.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "user@example.com", "password": "user123" },
-      "headers": {}
+      "payload": {
+        "email": "bob@example.com",
+        "password": "bob123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 200,
       "contains_key": "token",
-      "contains_value": { "email": "user@example.com" }
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "email"
+        ]
+      }
     }
   },
   {
-    "name": "Wrong password",
+    "name": "Successful login with Carol's credentials",
+    "category": "functional",
+    "description": "Validates that Carol can log in successfully and receives a JWT token and her email.",
+    "input": {
+      "method": "POST",
+      "endpoint": "/login",
+      "payload": {
+        "email": "carol@example.com",
+        "password": "carol123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "expected_result": {
+      "status_code": 200,
+      "contains_key": "token",
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "email"
+        ]
+      }
+    }
+  },
+  {
+    "name": "Login with wrong password for existing user",
     "category": "negative",
-    "description": "Correct email but wrong password should return 401.",
+    "description": "Verifies that an existing user cannot log in with an incorrect password.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "admin@example.com", "password": "wrongpassword" },
-      "headers": {}
+      "payload": {
+        "email": "alice@example.com",
+        "password": "wrongpassword"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 401,
-      "contains_key": "detail",
-      "contains_value": { "detail": "Invalid password" }
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Unknown email",
+    "name": "Login with unregistered email",
     "category": "negative",
-    "description": "Email not registered in the system should return 404.",
+    "description": "Verifies that an attempt to log in with an email not registered in the system fails.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "unknown@example.com", "password": "password123" },
-      "headers": {}
+      "payload": {
+        "email": "unknown@example.com",
+        "password": "anypassword"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 404,
-      "contains_key": "detail",
-      "contains_value": { "detail": "User not found" }
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Locked account",
+    "name": "Login with locked account (known bug)",
     "category": "negative",
-    "description": "Locked account should return 403 regardless of password.",
+    "description": "Tests the known bug where a locked account returns 200 OK with a 'Welcome!' message instead of 403 Forbidden.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "locked@example.com", "password": "locked123" },
-      "headers": {}
+      "payload": {
+        "email": "locked@example.com",
+        "password": "locked123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
-      "status_code": 403,
+      "status_code": 200,
       "contains_key": "detail",
-      "contains_value": { "detail": "Account is locked" }
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Missing email field",
+    "name": "Login with missing email field in payload",
     "category": "validation",
-    "description": "Missing email field should trigger Pydantic validation and return 422.",
+    "description": "Ensures that a login request fails when the 'email' field is omitted from the payload.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "password": "admin123" },
-      "headers": {}
+      "payload": {
+        "password": "alice123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 422,
       "contains_key": "detail",
-      "contains_value": null
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Missing password field",
+    "name": "Login with missing password field in payload",
     "category": "validation",
-    "description": "Missing password field should trigger Pydantic validation and return 422.",
+    "description": "Ensures that a login request fails when the 'password' field is omitted from the payload.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "admin@example.com" },
-      "headers": {}
+      "payload": {
+        "email": "alice@example.com"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 422,
       "contains_key": "detail",
-      "contains_value": null
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Empty email string",
+    "name": "Login with empty string for email",
     "category": "validation",
-    "description": "Empty email string is caught by app logic and returns 400.",
+    "description": "Verifies that an empty string for the email field results in a validation error.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "", "password": "admin123" },
-      "headers": {}
+      "payload": {
+        "email": "",
+        "password": "alice123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 400,
-      "contains_key": "detail",
-      "contains_value": { "detail": "Email and password are required" }
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Empty password string",
+    "name": "Login with empty string for password",
     "category": "validation",
-    "description": "Empty password string is caught by app logic and returns 400.",
+    "description": "Verifies that an empty string for the password field results in a validation error.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "admin@example.com", "password": "" },
-      "headers": {}
+      "payload": {
+        "email": "alice@example.com",
+        "password": ""
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 400,
-      "contains_key": "detail",
-      "contains_value": { "detail": "Email and password are required" }
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   },
   {
-    "name": "Extra field in payload",
+    "name": "Login with extra fields in payload",
     "category": "edge_case",
-    "description": "Extra fields in the payload are silently ignored — should return 200.",
+    "description": "Confirms that extra, unexpected fields in the login payload are silently ignored and do not prevent successful login.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "admin@example.com", "password": "admin123", "extra": "value" },
-      "headers": {}
+      "payload": {
+        "email": "alice@example.com",
+        "password": "alice123",
+        "extraField": "someValue",
+        "anotherField": 123
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 200,
       "contains_key": "token",
-      "contains_value": null
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "email"
+        ]
+      }
     }
   },
   {
-    "name": "Uppercase email",
+    "name": "Login with uppercase email (strict matching)",
     "category": "edge_case",
-    "description": "Email matching is case-sensitive — ADMIN@example.com is not found.",
+    "description": "Verifies that the API performs strict, case-sensitive matching for email addresses, treating 'ALICE@example.com' as not found.",
     "input": {
       "method": "POST",
       "endpoint": "/login",
-      "payload": { "email": "ADMIN@example.com", "password": "admin123" },
-      "headers": {}
+      "payload": {
+        "email": "ALICE@example.com",
+        "password": "alice123"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
     },
     "expected_result": {
       "status_code": 404,
-      "contains_key": "detail",
-      "contains_value": { "detail": "User not found" }
+      "contains_key": null,
+      "contains_value": null,
+      "max_response_time_ms": 2000,
+      "response_headers": {
+        "Content-Type": "application/json"
+      },
+      "response_schema": null
     }
   }
 ]

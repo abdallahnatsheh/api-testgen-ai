@@ -386,13 +386,43 @@ def _parse_args():
     parser.add_argument("--auth-url", metavar="URL", help="POST to this URL before running tests to obtain a Bearer token")
     parser.add_argument("--auth-payload", metavar="JSON", help="JSON payload for the auth request")
     parser.add_argument("--auth-token-path", metavar="PATH", default="token", help="Dot-notation path to token in auth response (default: token)")
-    parser.add_argument("--save", metavar="FILE", help="Save test cases to this file automatically")
-    parser.add_argument("--run", action="store_true", help="Execute test cases immediately after generation")
-    parser.add_argument("--provider", metavar="PROVIDER", choices=["gemini", "claude", "openai", "ollama"], help="AI provider")
-    parser.add_argument("--model", metavar="MODEL", help="Model name")
-    parser.add_argument("--api-key", metavar="KEY", help="API key for the provider")
+    parser.add_argument("--save",    metavar="FILE", help="Save test cases to this file automatically")
+    parser.add_argument("--no-run",  action="store_true", help="Skip test execution after generation (default: run automatically)")
+    parser.add_argument("--run",     action="store_true", help=argparse.SUPPRESS)  # kept for backward compat
+    parser.add_argument("--provider",      metavar="PROVIDER", choices=["gemini", "claude", "openai", "ollama"], help="AI provider")
+    parser.add_argument("--model",         metavar="MODEL", help="Model name")
+    parser.add_argument("--api-key",       metavar="KEY",  help="API key for the provider")
+    parser.add_argument("--save-settings", action="store_true", help="Save --provider/--model/--api-key to settings.json for future runs")
 
     return parser.parse_args()
+
+
+def _save_and_run(
+    test_cases: list[TestCase],
+    base_url: str,
+    auth_headers: dict,
+    args,
+    non_interactive: bool,
+) -> None:
+    """Save test cases (if requested) and run them (unless --no-run is set)."""
+    if args.save:
+        with open(args.save, "w") as f:
+            json.dump([tc.model_dump() for tc in test_cases], f, indent=2)
+        print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
+    elif not non_interactive:
+        if _prompt("Save test cases to file? (y/n)").lower() == "y":
+            save_test_cases(test_cases)
+
+    if non_interactive:
+        should_run = not args.no_run
+    else:
+        should_run = _prompt("Execute test cases against the API? (y/n)").lower() == "y"
+
+    if should_run:
+        logger.info("Executing %d tests against %s", len(test_cases), base_url)
+        run_tests(test_cases, base_url, global_headers=auth_headers)
+    else:
+        print(f"\n  Done. Test cases generated but not executed.\n")
 
 
 def _build_auth_headers(args) -> dict:
@@ -444,6 +474,8 @@ def main() -> None:
             sys.exit(1)
         ai_client.setup(provider, model, api_key)
         provider_label = PROVIDERS[provider]["label"]
+        if args.save_settings:
+            save_settings(provider, model, api_key)
     elif non_interactive and not args.provider:
         settings = load_settings() or {}
         provider = settings.get("provider", "")
@@ -503,18 +535,7 @@ def main() -> None:
 
         print_test_cases(all_test_cases)
         _flush_stdin()
-
-        if args.save:
-            with open(args.save, "w") as f:
-                json.dump([tc.model_dump() for tc in all_test_cases], f, indent=2)
-            print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
-        elif _prompt("Save all test cases to file? (y/n)").lower() == "y":
-            save_test_cases(all_test_cases)
-
-        if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
-            run_tests(all_test_cases, base_url, global_headers=auth_headers)
-        else:
-            print(f"\n  Done. Test cases generated but not executed.\n")
+        _save_and_run(all_test_cases, base_url, auth_headers, args, non_interactive)
         return
 
     # --- Postman mode ---
@@ -553,18 +574,7 @@ def main() -> None:
 
         print_test_cases(all_test_cases)
         _flush_stdin()
-
-        if args.save:
-            with open(args.save, "w") as f:
-                json.dump([tc.model_dump() for tc in all_test_cases], f, indent=2)
-            print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
-        elif _prompt("Save all test cases to file? (y/n)").lower() == "y":
-            save_test_cases(all_test_cases)
-
-        if args.run or _prompt("Execute test cases against the API? (y/n)").lower() == "y":
-            run_tests(all_test_cases, base_url, global_headers=auth_headers)
-        else:
-            print(f"\n  Done. Test cases generated but not executed.\n")
+        _save_and_run(all_test_cases, base_url, auth_headers, args, non_interactive)
         return
 
     # --- Manual mode ---
@@ -602,23 +612,7 @@ def main() -> None:
 
     print_test_cases(test_cases)
     _flush_stdin()
-
-    if args.save:
-        with open(args.save, "w") as f:
-            json.dump([tc.model_dump() for tc in test_cases], f, indent=2)
-        print(f"\n  {GREEN}✓ Saved to {args.save}{RESET}\n")
-    elif not non_interactive:
-        if _prompt("Save test cases to file? (y/n)").lower() == "y":
-            save_test_cases(test_cases)
-
-    if args.run:
-        logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
-        run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
-    elif not non_interactive and _prompt("Execute test cases against the API? (y/n)").lower() == "y":
-        logger.info("Executing %d tests against %s", len(test_cases), inputs.base_url)
-        run_tests(test_cases, inputs.base_url, global_headers=inputs.auth_headers)
-    else:
-        print(f"\n  Done. Test cases generated but not executed.\n")
+    _save_and_run(test_cases, inputs.base_url, inputs.auth_headers, args, non_interactive)
 
 
 if __name__ == "__main__":

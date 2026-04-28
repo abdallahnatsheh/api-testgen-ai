@@ -38,20 +38,32 @@ All ANSI constants live in `colors.py`. Never redefine them in `main.py` or `tes
 ## Sample API
 
 `api.py` is intentionally simple — it exists only for local testing. It demonstrates:
-- Normal auth flow (`admin@example.com` / `admin123`)
-- Locked account handling (`locked@example.com` → 403)
+- JWT auth flow: `POST /login` returns a signed JWT; `GET /me` requires a Bearer token
+- Valid credentials: `alice@example.com` / `alice123`, `bob@example.com` / `bob123`, `carol@example.com` / `carol123`
+- Locked account bug (`locked@example.com` → 200 instead of 403, intentional regression demo)
 - FastAPI Pydantic validation (missing fields → 422)
 
 ## Running the example test files
 
 ```bash
 # CLI runner
-python3 tester.py examples/local_api_login.json http://localhost:8000
-python3 tester.py examples/jsonplaceholder_post_gemini.json https://jsonplaceholder.typicode.com
+python3 tester.py examples/login/tests_gemini.json http://localhost:8000
+python3 tester.py examples/jsonplaceholder/tests_gemini.json https://jsonplaceholder.typicode.com
+
+# With auth flow (GET /me)
+python3 tester.py examples/me/tests_gemini.json http://localhost:8000 \
+  --auth-url http://localhost:8000/login \
+  --auth-payload '{"email":"alice@example.com","password":"alice123"}' \
+  --auth-token-path token
 
 # pytest runner
-pytest tests/ --test-file=examples/local_api_login.json --base-url=http://localhost:8000 -v
-pytest tests/ --test-file=examples/jsonplaceholder_post_gemini.json --base-url=https://jsonplaceholder.typicode.com -v
+pytest tests/ --test-file=examples/login/tests_gemini.json --base-url=http://localhost:8000 -v
+pytest tests/ --test-file=examples/jsonplaceholder/tests_gemini.json --base-url=https://jsonplaceholder.typicode.com -v
+
+# pytest with auth flow
+pytest tests/ --test-file=examples/me/tests_gemini.json --base-url=http://localhost:8000 \
+  --auth-url http://localhost:8000/login \
+  --auth-payload '{"email":"alice@example.com","password":"alice123"}' -v
 ```
 
 ## Style

@@ -290,6 +290,7 @@ class TestCLIArgs:
         args = MagicMock()
         args.bearer = "tok123"
         args.headers = None
+        args.auth_url = None
         result = main._build_auth_headers(args)
         assert result == {"Authorization": "Bearer tok123"}
 
@@ -298,6 +299,7 @@ class TestCLIArgs:
         args = MagicMock()
         args.bearer = None
         args.headers = ["X-API-Key=abc"]
+        args.auth_url = None
         result = main._build_auth_headers(args)
         assert result == {"X-API-Key": "abc"}
 
@@ -306,5 +308,6 @@ class TestCLIArgs:
         args = MagicMock()
         args.bearer = None
         args.headers = ["BADFORMAT"]
+        args.auth_url = None
         with pytest.raises(SystemExit):
             main._build_auth_headers(args)

@@ -31,15 +31,17 @@ if body.password == expected_password:  # BUG: condition flipped — auth bypass
     raise HTTPException(status_code=401, detail="Invalid password")
 ```
 
-**Caught by:** tests "Valid admin login", "Valid user login", "Wrong password returns 401"
+**Caught by:** any functional login test (e.g. "Valid login — alice", "Valid login — bob") and "Wrong password returns 401"
 
 ---
 
 ### `locked` — Locked account returns 200
 Locked accounts are silently let through instead of being blocked with 403.
 
+> **Note:** This bug is already present in the codebase (it ships as the intentional demo bug). Use `/fix-bug` to restore 403 first, then re-introduce with this skill if needed.
+
 ```python
-# BEFORE (correct)
+# BEFORE (correct — after fix-bug restores it)
 if body.email in LOCKED_ACCOUNTS:
     raise HTTPException(status_code=403, detail="Account is locked")
 
@@ -48,7 +50,7 @@ if body.email in LOCKED_ACCOUNTS:
     raise HTTPException(status_code=200, detail="Welcome!")  # BUG: locked account returns 200
 ```
 
-**Caught by:** test "Login with locked account"
+**Caught by:** any test asserting `locked@example.com` → 403
 
 ## Steps
 

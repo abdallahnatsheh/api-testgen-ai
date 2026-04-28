@@ -31,6 +31,8 @@ grep -n "# BUG:" api.py
 | `auth` | `if body.password == expected_password:` | `if body.password != expected_password:` |
 | `locked` | `raise HTTPException(status_code=200, detail="Welcome!")` | `raise HTTPException(status_code=403, detail="Account is locked")` |
 
+> **Note on `locked`:** The `locked` bug ships in the codebase intentionally as a regression demo. Fixing it changes `locked@example.com` from 200 → 403, which will cause the existing example test cases (which expect 200) to fail. Only fix it when the user explicitly wants a clean all-pass run.
+
 3. Confirm all `# BUG:` comments are removed.
 4. Remind the user to restart `api.py`.
 5. Suggest running the tester to confirm everything passes.

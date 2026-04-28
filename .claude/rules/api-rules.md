@@ -11,3 +11,5 @@ paths:
 - Mark intentional bugs with `# BUG:` inline comment — never leave silent broken logic
 - Keep `LOCKED_ACCOUNTS` in sync with `VALID_CREDENTIALS` — every locked email must have a password entry
 - Never leak internal error details in HTTPException messages — keep them user-facing and generic
+- `GET /me` requires `Authorization: Bearer <token>` — missing or non-Bearer header → 401 "Missing or invalid Authorization header"; invalid/expired JWT → 401 "Invalid token"
+- `locked@example.com` currently returns 200 with `{"detail":"Welcome!"}` — this is the intentional demo bug marked with `# BUG:`

@@ -23,7 +23,7 @@ curl -s http://localhost:8000/users > /dev/null && echo "running" || echo "stopp
 
 2. Run the full test suite:
 ```bash
-python3 tester.py GM_TEST_CASE.json http://localhost:8000
+venv/bin/python3 tester.py examples/login/tests_gemini.json http://localhost:8000
 ```
 
 3. For each failure, read `api.py` and trace the logic for that request path.

@@ -11,7 +11,7 @@ paths:
 - Use `400` only for empty string inputs caught by explicit app logic (e.g. `if not body.email`)
 - Use `404` for unknown/unregistered resources (e.g. email not in the system)
 - Use `401` for authentication failures (wrong password)
-- Use `403` for authorization failures (account locked, forbidden)
+- Use `403` for authorization failures (account locked, forbidden) — **exception**: `locked@example.com` currently returns `200` due to the intentional demo bug; test cases for that account should expect `200`, not `403`
 - Use `405` for wrong HTTP methods on an endpoint
 
 ## contains_key

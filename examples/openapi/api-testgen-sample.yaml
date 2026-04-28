@@ -92,12 +92,10 @@ paths:
         Authenticates a user with email and password.
         Returns 200 with {"token": "<jwt>"} on success.
         Returns 401 with {"detail": "Invalid credentials"} for wrong password.
-        Returns 403 with {"detail": "Account locked"} for locked@example.com.
         Returns 422 for missing email or password fields.
-        Returns 400 with {"detail": "Email is required"} for empty email string.
-        Returns 400 with {"detail": "Password is required"} for empty password string.
-        Known valid credentials: alice@example.com / password123, bob@example.com / securepass.
-        Known locked account: locked@example.com (any password returns 403, but currently returns 200 — this is a known bug).
+        Returns 400 with {"detail": "Email and password are required"} for empty email or password string.
+        Known valid credentials: alice@example.com / alice123, bob@example.com / bob123, carol@example.com / carol123.
+        Known locked account: locked@example.com / locked123 — BUG: currently returns 200 with {"detail":"Welcome!"} instead of 403.
       operationId: login
       requestBody:
         required: true
@@ -144,15 +142,5 @@ paths:
                   detail:
                     type: string
                     example: Invalid credentials
-        "403":
-          description: Account locked
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  detail:
-                    type: string
-                    example: Account locked
         "422":
           description: Missing required fields

@@ -53,6 +53,14 @@ With API key header:
 python3 tester.py <json_file> https://api.example.com --header "X-API-Key=abc123"
 ```
 
+With auto-login (auth flow):
+```bash
+python3 tester.py <json_file> http://localhost:8000 \
+  --auth-url http://localhost:8000/login \
+  --auth-payload '{"email":"alice@example.com","password":"alice123"}' \
+  --auth-token-path token
+```
+
 Multiple headers (repeatable):
 ```bash
 python3 tester.py <json_file> https://api.example.com --bearer <token> --header "X-Tenant=acme"
@@ -64,9 +72,13 @@ python3 tester.py <json_file> https://api.example.com --bearer <token> --header 
 - Flag any unexpected failures — a failure is unexpected if it is NOT caused by a known intentional `# BUG:` in `api.py`
 - For real APIs, all failures are unexpected unless the user has explained known issues
 
-## Known test files
+## Known test files (examples/)
 
 | File | Endpoint | Notes |
 |------|----------|-------|
-| `test_cases.json` | `/login` | Focused set including bug scenarios |
-| `GM_TEST_CASE.json` | `/login` | Gemini-generated, 12 cases, includes locked account |
+| `examples/login/tests_gemini.json` | `/login` | Gemini-generated, includes locked account bug test |
+| `examples/login/tests_ollama.json` | `/login` | Ollama-generated |
+| `examples/users/tests_gemini.json` | `/users` | GET all users |
+| `examples/users_by_id/tests_gemini.json` | `/users/{id}` | GET single user |
+| `examples/me/tests_gemini.json` | `/me` | Requires `--bearer <alice_token>` or `--auth-url` |
+| `examples/pokeapi/tests_pokemon.json` | PokéAPI | External API, no auth |

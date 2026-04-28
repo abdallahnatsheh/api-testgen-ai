@@ -20,6 +20,7 @@ python3 tester.py <file.json> <base_url>                      # CLI runner stand
 python3 tester.py <file.json> <base_url> --bearer <token>     # with Bearer auth
 python3 tester.py <file.json> <base_url> --header X-API-Key=x # with custom header
 python3 tester.py <file.json> <base_url> --html report.html   # with HTML report
+python3 tester.py <file.json> <base_url> --auth-url http://host/login --auth-payload '{"email":"x","password":"y"}' --auth-token-path token  # auto-login before tests
 pytest tests/ --test-file=<file.json> --base-url=<url> -v     # pytest runner
 pytest tests/ --test-file=<file.json> --base-url=<url> --junit-xml=results.xml  # CI output
 pytest tests/ --test-file=<file.json> --base-url=<url> --html=report.html --self-contained-html  # styled HTML report (CSS auto-applied via pytest.ini)
@@ -79,6 +80,9 @@ main.py
         └── prompts for optional test case count (default: 8-12, or exact number)
   └── ai_client.generate_test_cases(method, path, payload, description, count) → list[TestCase]
         └── retries up to 3x on JSONDecodeError or 503 UNAVAILABLE
+  └── tester._fetch_auth_token(auth_url, auth_payload, token_path) → str  [optional pre-run step]
+        └── POSTs to auth_url, walks token_path (dot-notation) in JSON response, returns token string
+        └── injects token as Authorization: Bearer into global_headers before test loop
   └── tester.run_tests(test_cases, base_url, global_headers, html_path) → int (failed count)
         └── merges global_headers + per-test headers on every request
         └── requests.request() per TestCase → assert status_code + optional contains_key + optional contains_value
@@ -124,7 +128,7 @@ CollectedInput
 - `tester.py` — colored, verbose, human-friendly. Returns failed count; standalone exits `sys.exit(failed)`. `--html FILE` writes a self-contained HTML report (no extra dependencies).
 - `tests/` (pytest) — CI/CD-friendly. Each JSON test case is a named pytest test. Supports `-k` filtering, `--junit-xml`, and all standard pytest flags.
 
-Both share the same JSON format and auth options (`--bearer`, `--header`).
+Both share the same JSON format and auth options (`--bearer`, `--header`, `--auth-url`, `--auth-payload`, `--auth-token-path`).
 
 ## Key details
 
@@ -138,15 +142,19 @@ Both share the same JSON format and auth options (`--bearer`, `--header`).
 - `tests/report.css` — minimal CSS applied to pytest-html reports automatically via `addopts` in `pytest.ini`. Increases font sizes and adds green/red pass/fail colors. No dark mode.
 - `colors.py` is the single source of ANSI constants — never redefine them in other files.
 - `api.py` uses `HTTPException` for all error responses — plain `return (dict, status)` tuples don't work in FastAPI.
+- `api.py` issues real HS256 JWTs on `POST /login` (via PyJWT). `GET /me` requires `Authorization: Bearer <token>`. Valid credentials: alice/alice123, bob/bob123, carol/carol123. Secret key is `dev-secret-key-for-local-testing-only-32b`, tokens expire in 60 minutes.
 - `settings.json` stores provider, model, and API key in plain text — never commit it (already in `.gitignore`).
 - FastAPI returns `422` for missing/invalid fields (Pydantic validation), not `400` — test cases must expect `422` for schema errors.
-- `LOCKED_ACCOUNTS` set in `api.py` controls which emails return 403 — `locked@example.com` is the known example. This is a known bug: the account currently returns 200 instead of 403.
+- `LOCKED_ACCOUNTS` set in `api.py` controls which emails return 403 — `locked@example.com` is the known example. This is a known bug: the account currently returns 200 with `{"detail": "Welcome!"}` instead of 403.
+- `tester._fetch_auth_token(auth_url, auth_payload, token_path)` — POSTs to `auth_url`, walks `token_path` (dot-notation) in the JSON response, returns the token string. Exits with an error if auth fails. Called before the test loop when `--auth-url` is provided.
+- `_build_auth_headers(args)` in `main.py` handles all three auth modes: `--bearer`, `--header`, and `--auth-url` (calls `_fetch_auth_token`).
 - `postman_importer.py` parses Postman collection v2.1 JSON — supports nested folders, raw JSON body, query params. Returns `list[PostmanRequest]` (name, method, path, payload, headers).
 - `openapi_importer.py` parses OpenAPI 3.x and Swagger 2.x specs (YAML or JSON). Extracts base URL from `servers[0].url` (OpenAPI 3.x) or `host`+`basePath` (Swagger 2.x). Generates example payloads from request body schemas. Returns `tuple[str, list[OpenAPIRequest]]`. Always prompts for a description even in non-interactive mode — specs rarely have complete enough descriptions for good AI test generation.
 - `--openapi` flag in `main.py` uses `--base-url` to override the spec's server URL if needed.
 - `tester.py --dry-run` validates JSON test case files against the `TestCase` schema without sending any HTTP requests — used in CI to catch malformed files before running the server.
 - `main.py` input mode 2 (Postman import) calls `load_collection()`, prompts for a description once, then generates test cases for each request in the collection.
-- `main.py` supports full CLI args (`--url`, `--postman`, `--method`, `--base-url`, `--payload`, `--description`, `--count`, `--bearer`, `--header`, `--save`, `--run`, `--provider`, `--model`, `--api-key`) — interactive prompts are kept as fallback when args are omitted.
+- `main.py` supports full CLI args (`--url`, `--postman`, `--method`, `--base-url`, `--payload`, `--description`, `--count`, `--bearer`, `--header`, `--auth-url`, `--auth-payload`, `--auth-token-path`, `--save`, `--run`, `--provider`, `--model`, `--api-key`) — interactive prompts are kept as fallback when args are omitted.
+- `main.py` non-interactive mode reads `api_key` from `settings.json` when `--api-key` is not passed — no need to supply it on every run.
 
 ## Examples
 
@@ -161,4 +169,10 @@ python3 api.py &
 python3 tester.py examples/login/tests_gemini.json http://localhost:8000
 python3 tester.py examples/users/tests_ollama.json http://localhost:8000
 python3 tester.py examples/pokeapi/tests_pokemon.json https://pokeapi.co
+
+# Auth flow — auto-login before running /me tests
+python3 tester.py examples/me/tests_gemini.json http://localhost:8000 \
+  --auth-url http://localhost:8000/login \
+  --auth-payload '{"email":"alice@example.com","password":"alice123"}' \
+  --auth-token-path token
 ```

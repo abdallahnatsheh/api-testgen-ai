@@ -12,6 +12,7 @@ from colors import (BOLD, CYAN, DIM, GREEN, RED, RESET, YELLOW,
 from models import TestCase
 from postman_importer import load_collection
 from openapi_importer import load_spec
+import tester
 from tester import run_tests
 
 SETTINGS_FILE = "settings.json"
@@ -382,6 +383,9 @@ def _parse_args():
     parser.add_argument("--count", metavar="N", type=int, help="Number of test cases to generate per endpoint")
     parser.add_argument("--bearer", metavar="TOKEN", help="Bearer token for auth")
     parser.add_argument("--header", metavar="NAME=VALUE", action="append", dest="headers", help="Custom header (repeatable)")
+    parser.add_argument("--auth-url", metavar="URL", help="POST to this URL before running tests to obtain a Bearer token")
+    parser.add_argument("--auth-payload", metavar="JSON", help="JSON payload for the auth request")
+    parser.add_argument("--auth-token-path", metavar="PATH", default="token", help="Dot-notation path to token in auth response (default: token)")
     parser.add_argument("--save", metavar="FILE", help="Save test cases to this file automatically")
     parser.add_argument("--run", action="store_true", help="Execute test cases immediately after generation")
     parser.add_argument("--provider", metavar="PROVIDER", choices=["gemini", "claude", "openai", "ollama"], help="AI provider")
@@ -402,6 +406,12 @@ def _build_auth_headers(args) -> dict:
                 sys.exit(1)
             name, _, value = h.partition("=")
             headers[name.strip()] = value.strip()
+    if getattr(args, "auth_url", None):
+        if not getattr(args, "auth_payload", None):
+            print(f"  {RED}--auth-payload is required with --auth-url{RESET}\n")
+            sys.exit(1)
+        token = tester._fetch_auth_token(args.auth_url, args.auth_payload, args.auth_token_path)
+        headers["Authorization"] = f"Bearer {token}"
     return headers
 
 

@@ -17,6 +17,46 @@ logger = logging.getLogger(__name__)
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _fetch_auth_token(auth_url: str, auth_payload: str, token_path: str) -> str:
+    """POST to auth_url, walk token_path (dot-notation) in the JSON response, return the token."""
+    print(f"  {YELLOW}→ Auth   {RESET} POST {auth_url}")
+    try:
+        payload = json.loads(auth_payload)
+    except json.JSONDecodeError as e:
+        print(f"  {RED}--auth-payload is not valid JSON: {e}{RESET}")
+        sys.exit(1)
+
+    try:
+        resp = requests.post(auth_url, json=payload, timeout=10)
+    except requests.exceptions.RequestException as e:
+        print(f"  {RED}Auth request failed: {e}{RESET}")
+        sys.exit(1)
+
+    if not resp.ok:
+        print(f"  {RED}Auth failed: {resp.status_code} {resp.reason}{RESET}")
+        sys.exit(1)
+
+    try:
+        body = resp.json()
+    except Exception:
+        print(f"  {RED}Auth response is not JSON{RESET}")
+        sys.exit(1)
+
+    token: object = body
+    for part in token_path.split("."):
+        if not isinstance(token, dict) or part not in token:
+            print(f"  {RED}Token path '{token_path}' not found in auth response. Keys: {list(body.keys()) if isinstance(body, dict) else body}{RESET}")
+            sys.exit(1)
+        token = token[part]
+
+    if not isinstance(token, str):
+        print(f"  {RED}Token at '{token_path}' is not a string (got {type(token).__name__}){RESET}")
+        sys.exit(1)
+
+    print(f"  {GREEN}✓ Token  {RESET} {token[:30]}…  (path: '{token_path}')\n")
+    return token
+
+
 def _build_url(base_url: str, endpoint: str) -> str:
     base = base_url.rstrip("/")
     path = endpoint if endpoint.startswith("/") else f"/{endpoint}"
@@ -347,6 +387,22 @@ if __name__ == "__main__":
         help="Custom header in NAME=VALUE format (repeatable)",
     )
     parser.add_argument(
+        "--auth-url",
+        metavar="URL",
+        help="POST to this URL before running tests to obtain a Bearer token",
+    )
+    parser.add_argument(
+        "--auth-payload",
+        metavar="JSON",
+        help="JSON payload for the auth request (e.g. '{\"email\":\"x\",\"password\":\"y\"}')",
+    )
+    parser.add_argument(
+        "--auth-token-path",
+        metavar="PATH",
+        default="token",
+        help="Dot-notation path to the token in the auth response (default: token)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate the JSON file without sending any HTTP requests",
@@ -369,6 +425,13 @@ if __name__ == "__main__":
                 sys.exit(1)
             name, _, value = h.partition("=")
             global_headers[name.strip()] = value.strip()
+
+    if args.auth_url:
+        if not args.auth_payload:
+            print("--auth-payload is required with --auth-url")
+            sys.exit(1)
+        token = _fetch_auth_token(args.auth_url, args.auth_payload, args.auth_token_path)
+        global_headers["Authorization"] = f"Bearer {token}"
 
     with open(args.json_file) as f:
         cases = [TestCase.model_validate(tc) for tc in json.load(f)]

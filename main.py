@@ -509,7 +509,7 @@ def main() -> None:
             sys.exit(1)
 
         base_url = args.base_url or spec_base_url
-        if not description:
+        if not description and not non_interactive:
             description = _load_description()
         if not auth_headers and not non_interactive:
             auth_headers = _collect_auth()
@@ -544,9 +544,9 @@ def main() -> None:
         if not base_url:
             print(f"  {RED}--base-url is required with --postman{RESET}\n")
             sys.exit(1)
-        if not description:
+        if not description and not non_interactive:
             description = _load_description()
-        if not auth_headers:
+        if not auth_headers and not non_interactive:
             auth_headers = _collect_auth()
 
         try:

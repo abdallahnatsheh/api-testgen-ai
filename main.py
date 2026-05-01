@@ -315,52 +315,6 @@ def _flush_stdin() -> None:
         pass
 
 
-def _run_postman_import(provider_label: str, base_url: str, auth_headers: dict, count: int | None) -> None:
-    collection_path = _prompt("Postman collection file path  (e.g. collection.json)")
-    if not collection_path:
-        print(f"  {RED}File path is required. Exiting.{RESET}\n")
-        sys.exit(1)
-
-    try:
-        requests = load_collection(collection_path)
-    except Exception as e:
-        print(f"  {RED}Failed to load collection: {e}{RESET}\n")
-        sys.exit(1)
-
-    print(f"\n  {GREEN}✓ Loaded {len(requests)} requests from collection{RESET}\n")
-
-    description = _load_description()
-
-    all_test_cases: list[TestCase] = []
-
-    for req in requests:
-        print(f"  {CYAN}Generating tests for:{RESET} {req.method} {req.path}  {DIM}({req.name}){RESET}")
-        try:
-            test_cases = ai_client.generate_test_cases(req.method, req.path, json.dumps(req.payload) if req.payload else None, description, count)
-            all_test_cases.extend(test_cases)
-            print(f"  {GREEN}✓ {len(test_cases)} test cases generated{RESET}\n")
-        except Exception as e:
-            logger.error("Generation failed for %s %s: %s", req.method, req.path, e)
-            print(f"  {RED}✗ Failed: {e}{RESET}\n")
-
-    if not all_test_cases:
-        print(f"  {RED}No test cases generated. Exiting.{RESET}\n")
-        sys.exit(1)
-
-    print_test_cases(all_test_cases)
-
-    _flush_stdin()
-
-    if _prompt("Save all test cases to file? (y/n)").lower() == "y":
-        save_test_cases(all_test_cases)
-
-    if _prompt("Execute test cases against the API? (y/n)").lower() != "y":
-        print(f"\n  Done. Test cases generated but not executed.\n")
-        return
-
-    merged_headers = {**auth_headers}
-    run_tests(all_test_cases, base_url, global_headers=merged_headers)
-
 
 def _parse_args():
     import argparse

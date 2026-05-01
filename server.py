@@ -289,6 +289,7 @@ class PytestRunRequest(BaseModel):
     base_url: str
     bearer: Optional[str] = None
     generate_xml: bool = False
+    generate_html: bool = False
 
 
 @app.post("/api/run/pytest")
@@ -298,6 +299,7 @@ def run_pytest(req: PytestRunRequest):
         tmp_path = tmp.name
 
     xml_path = str(STATIC_DIR / "results.xml") if req.generate_xml else None
+    html_path = str(STATIC_DIR / "pytest-report.html") if req.generate_html else None
     try:
         cmd = [
             "venv/bin/python3", "-m", "pytest", "tests/test_api.py",
@@ -309,6 +311,8 @@ def run_pytest(req: PytestRunRequest):
             cmd += [f"--bearer={req.bearer}"]
         if xml_path:
             cmd += [f"--junit-xml={xml_path}"]
+        if html_path:
+            cmd += [f"--html={html_path}", "--self-contained-html"]
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
         output = _strip_ansi(result.stdout)
@@ -319,6 +323,7 @@ def run_pytest(req: PytestRunRequest):
             "output": output,
             "exit_code": result.returncode,
             "xml_url": "/static/results.xml" if (xml_path and Path(xml_path).exists()) else None,
+            "report_url": "/static/pytest-report.html" if (html_path and Path(html_path).exists()) else None,
         }
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=500, detail="pytest timed out after 180s")

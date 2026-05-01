@@ -4,19 +4,20 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-CLI tool that uses AI (Gemini, Claude, OpenAI, Ollama) to generate and execute API test cases from a description or spec.
+CLI tool and web UI that uses AI (Gemini, Claude, OpenAI, Ollama) to generate and execute API test cases from a description or spec.
 
 ## Commands
 
 ```bash
 venv/bin/python3 -m pip install -r requirements.txt
 venv/bin/python3 api.py                                        # sample FastAPI server on :8000
+venv/bin/python3 server.py                                     # web UI server on :8080
 venv/bin/python3 main.py                                       # interactive mode
 venv/bin/python3 main.py --url http://host/path --method POST  # non-interactive
 venv/bin/python3 main.py --postman col.json --base-url http://host
 venv/bin/python3 main.py --openapi spec.yaml
 venv/bin/python3 tester.py <file.json> <base_url> [--bearer TOKEN] [--auth-url URL --auth-payload JSON] [--html report.html] [--dry-run]
-venv/bin/python3 -m pytest tests/ --test-file=<file.json> --base-url=<url> [-v] [--junit-xml=results.xml]
+venv/bin/python3 -m pytest tests/ --test-file=<file.json> --base-url=<url> [-v] [--junit-xml=results.xml] [--html=report.html --self-contained-html]
 ```
 
 Always use `venv/bin/python3` — never system python or `--break-system-packages`.
@@ -32,6 +33,8 @@ colors.py            ANSI constants — single source, never redefine elsewhere
 postman_importer.py  Postman v2.1 JSON → list[PostmanRequest]
 openapi_importer.py  OpenAPI 3.x / Swagger 2.x → (base_url, list[OpenAPIRequest])
 api.py               Sample FastAPI server: /users, /users/{id}, /login (JWT), /me (protected)
+server.py            Web UI FastAPI server on :8080 — parse, generate, save, run endpoints
+static/index.html    Dark-theme SPA — provider config, 3 input tabs, live gen log, 3 run modes
 tests/conftest.py    pytest fixtures + CLI options incl. --auth-url flow
 tests/test_api.py    Parametrized pytest — one test per JSON test case
 tests/test_api_server.py  29 unit tests for api.py

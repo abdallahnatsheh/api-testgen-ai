@@ -8,8 +8,9 @@ CLI tool that uses AI to generate and run API test cases. Supports **Gemini**, *
 
 - Generates 4 test categories: **Functional**, **Negative**, **Edge Cases**, **Validation**
 - **3 input modes**: single endpoint (`--url`), Postman collection (`--postman`), OpenAPI/Swagger spec (`--openapi`)
+- **Web UI**: browser-based interface — same capabilities as the CLI, no terminal needed
 - **Auth flow**: auto-login before tests via `--auth-url` — no manual token copy-paste
-- **2 test runners**: colored CLI (`tester.py`) and pytest (`tests/`) for CI/CD
+- **3 test runners**: built-in HTTP, colored CLI (`tester.py`), and pytest (`tests/`) for CI/CD
 - **HTML reports**, JUnit XML, response time assertions, JSON Schema validation
 - Saves provider settings — configure once, reuse every run
 
@@ -27,6 +28,18 @@ Get an API key: [Gemini (free)](https://aistudio.google.com) · [Claude](https:/
 ---
 
 ## Quick Start
+
+### Web UI
+
+```bash
+python3 api.py    # start the sample API on :8000
+python3 server.py # start the web UI on :8080
+# open http://localhost:8080
+```
+
+Pick a provider, paste your API key, enter an endpoint URL or upload a spec, and click **Generate**. Tests run directly in the browser — no terminal needed.
+
+### CLI
 
 ```bash
 # Start the sample API
@@ -105,8 +118,7 @@ Auth flags are the same as `main.py`. `--dry-run` validates JSON without hitting
 ### pytest — CI/CD runner
 
 ```bash
-pytest tests/ --test-file=<file.json> --base-url=<url> [auth] [-v] [--junit-xml=results.xml]
-pytest tests/ --test-file=<file.json> --base-url=<url> --html=report.html --self-contained-html
+pytest tests/ --test-file=<file.json> --base-url=<url> [auth] [-v] [--junit-xml=results.xml] [--html=report.html --self-contained-html]
 ```
 
 Auth flags: `--bearer`, `--header`, `--auth-url`, `--auth-payload`, `--auth-token-path`

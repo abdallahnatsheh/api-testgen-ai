@@ -336,10 +336,14 @@ input[type=file]::file-selector-button { background:var(--surface-3); border:1px
 
     <!-- pytest options -->
     <div id="runOpts-pytest" class="hidden">
-      <div class="fg">
+      <div class="fg" style="display:flex;gap:24px;flex-wrap:wrap;">
         <label style="gap:8px;cursor:pointer;">
           <input type="checkbox" id="genXml" style="width:auto;accent-color:var(--primary)">
-          Generate JUnit XML report
+          Generate JUnit XML
+        </label>
+        <label style="gap:8px;cursor:pointer;">
+          <input type="checkbox" id="genPytestHtml" style="width:auto;accent-color:var(--primary)">
+          Generate HTML report
         </label>
       </div>
     </div>
@@ -652,7 +656,8 @@ async function handleRun() {
 
     } else {
       const genXml = document.getElementById('genXml').checked;
-      const data = await postJSON('/api/run/pytest', {test_cases:generatedCases, base_url:baseUrl, bearer, generate_xml:genXml});
+      const genPytestHtml = document.getElementById('genPytestHtml').checked;
+      const data = await postJSON('/api/run/pytest', {test_cases:generatedCases, base_url:baseUrl, bearer, generate_xml:genXml, generate_html:genPytestHtml});
       renderTerminalResults(data, 'pytest');
     }
 

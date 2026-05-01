@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API TestGen AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0a0c14; --surface:#111422; --surface-2:#181b2e; --surface-3:#1f2340;
+  --border:#252a45; --border-2:#2f3558;
+  --primary:#6366f1; --primary-hover:#818cf8; --primary-dim:rgba(99,102,241,.15);
+  --success:#10b981; --success-dim:rgba(16,185,129,.12);
+  --error:#f43f5e; --error-dim:rgba(244,63,94,.12);
+  --warning:#f59e0b; --warning-dim:rgba(245,158,11,.12);
+  --text:#e8eaf6; --text-2:#9095b8; --text-3:#545878;
+  --radius:10px; --radius-sm:6px; --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; line-height:1.5; }
+::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:var(--surface)} ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+.app { display:grid; grid-template-rows:56px 1fr; min-height:100vh; }
+
+/* Header */
+header { display:flex; align-items:center; gap:12px; padding:0 24px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.logo { width:32px; height:32px; background:linear-gradient(135deg,var(--primary),#a855f7); border-radius:8px; display:grid; place-items:center; font-size:16px; font-weight:700; color:#fff; flex-shrink:0; }
+header h1 { font-size:15px; font-weight:600; letter-spacing:-.2px; }
+header .sub { font-size:12px; color:var(--text-3); margin-left:4px; }
+.hspacer { flex:1; }
+.hbadge { font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; background:var(--primary-dim); color:var(--primary-hover); border:1px solid rgba(99,102,241,.3); }
+
+/* Layout */
+.main { display:grid; grid-template-columns:280px 1fr; overflow:hidden; height:calc(100vh - 56px); }
+.sidebar { background:var(--surface); border-right:1px solid var(--border); padding:20px 16px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+.content { padding:24px; overflow-y:auto; display:flex; flex-direction:column; gap:20px; }
+
+/* Forms */
+.sec-label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
+.fg { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.fg:last-child { margin-bottom:0; }
+label { font-size:12px; font-weight:500; color:var(--text-2); display:flex; align-items:center; gap:6px; }
+input,select,textarea { width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:13px; padding:8px 10px; transition:border-color .15s; outline:none; }
+input:focus,select:focus,textarea:focus { border-color:var(--primary); }
+input.error { border-color:var(--error); }
+textarea { resize:vertical; min-height:72px; font-family:'JetBrains Mono',monospace; font-size:12px; }
+textarea.desc { font-family:'Inter',sans-serif; font-size:13px; }
+select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239095b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; padding-right:28px; }
+.form-row { display:grid; grid-template-columns:110px 1fr; gap:8px; }
+input[type=file] { cursor:pointer; padding:6px 10px; }
+input[type=file]::file-selector-button { background:var(--surface-3); border:1px solid var(--border-2); border-radius:4px; color:var(--text); font-size:12px; padding:4px 10px; cursor:pointer; margin-right:10px; font-family:inherit; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:9px 16px; border-radius:var(--radius-sm); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:all .15s; white-space:nowrap; }
+.btn-primary { background:var(--primary); color:#fff; width:100%; padding:11px; }
+.btn-primary:hover { background:var(--primary-hover); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+.btn-success { background:var(--success); color:#fff; width:100%; padding:11px; }
+.btn-success:hover { background:#34d399; }
+.btn-success:disabled { opacity:.5; cursor:not-allowed; }
+.btn-ghost { background:transparent; color:var(--text-2); border:1px solid var(--border); font-size:12px; padding:5px 10px; }
+.btn-ghost:hover { border-color:var(--border-2); color:var(--text); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-inline { background:var(--surface-3); border:1px solid var(--border); border-radius:4px; color:var(--text-2); font-size:11px; padding:2px 7px; cursor:pointer; font-family:inherit; transition:all .15s; margin-left:auto; }
+.btn-inline:hover { color:var(--text); border-color:var(--border-2); }
+.btn-row { display:flex; gap:8px; margin-top:4px; }
+.btn-row .btn { flex:1; }
+
+/* Card */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.card-title { font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.card-title .icon { font-size:16px; }
+
+/* Tabs */
+.tabs { display:flex; gap:2px; background:var(--bg); border-radius:var(--radius-sm); padding:3px; margin-bottom:18px; }
+.tab { flex:1; padding:7px; text-align:center; border-radius:5px; cursor:pointer; font-size:12px; font-weight:500; color:var(--text-2); transition:all .15s; border:none; background:transparent; font-family:inherit; }
+.tab.active { background:var(--surface-2); color:var(--text); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.badge-functional { background:rgba(99,102,241,.2); color:#a5b4fc; }
+.badge-negative    { background:rgba(244,63,94,.2);  color:#fda4af; }
+.badge-edge_case   { background:rgba(245,158,11,.2); color:#fcd34d; }
+.badge-validation  { background:rgba(16,185,129,.2); color:#6ee7b7; }
+.badge-GET    { background:rgba(16,185,129,.2); color:#6ee7b7; }
+.badge-POST   { background:rgba(99,102,241,.2); color:#a5b4fc; }
+.badge-PUT    { background:rgba(245,158,11,.2); color:#fcd34d; }
+.badge-PATCH  { background:rgba(245,158,11,.2); color:#fcd34d; }
+.badge-DELETE { background:rgba(244,63,94,.2);  color:#fda4af; }
+
+/* Test cards */
+.category-group { margin-bottom:20px; }
+.cat-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.cat-count { background:var(--surface-3); color:var(--text-3); border-radius:10px; padding:1px 7px; font-size:11px; }
+.test-cards { display:flex; flex-direction:column; gap:8px; }
+.test-card { background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; transition:border-color .15s; }
+.test-card:hover { border-color:var(--border-2); }
+.tc-name { font-size:13px; font-weight:500; margin-bottom:3px; }
+.tc-desc { font-size:11px; color:var(--text-2); margin-bottom:6px; }
+.tc-meta { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.endpoint { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-2); }
+.status-pill { font-size:10px; font-weight:600; padding:1px 6px; border-radius:3px; font-family:'JetBrains Mono',monospace; background:var(--surface-3); color:var(--text-2); }
+
+/* Generation log */
+.gen-log { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; max-height:180px; overflow-y:auto; margin-top:12px; }
+.log-line { padding:2px 0; }
+.log-info    { color:var(--text-2); }
+.log-success { color:var(--success); }
+.log-error   { color:var(--error); }
+.log-warning { color:var(--warning); }
+
+/* Results */
+.summary-bar { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:16px; }
+.sstat .num { font-size:22px; font-weight:700; line-height:1; }
+.sstat .lbl { font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+.sdiv { width:1px; height:36px; background:var(--border); }
+.sspacer { flex:1; }
+.progress-track { height:4px; background:var(--surface-3); border-radius:2px; overflow:hidden; margin-bottom:16px; }
+.progress-fill { height:100%; background:var(--success); border-radius:2px; transition:width .4s ease; }
+.result-item { display:grid; grid-template-columns:24px 1fr auto; gap:10px; align-items:start; padding:10px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; }
+.result-item.passed { border-left:3px solid var(--success); }
+.result-item.failed { border-left:3px solid var(--error); }
+.result-icon { font-size:16px; line-height:1.4; }
+.result-name { font-size:13px; font-weight:500; margin-bottom:2px; }
+.result-desc { font-size:11px; color:var(--text-2); margin-bottom:4px; }
+.failure-msg { font-size:11px; color:var(--error); background:var(--error-dim); border-radius:4px; padding:3px 8px; margin-top:3px; font-family:'JetBrains Mono',monospace; }
+.result-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.result-code { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; }
+.result-time { font-size:11px; color:var(--text-3); }
+
+/* Terminal output */
+.terminal { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; max-height:360px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; color:var(--text-2); margin-top:12px; }
+
+/* Run mode tabs */
+.run-modes { display:flex; gap:2px; background:var(--bg); border-radius:var(--radius-sm); padding:3px; margin-bottom:16px; }
+.run-mode { flex:1; padding:6px; text-align:center; border-radius:5px; cursor:pointer; font-size:12px; font-weight:500; color:var(--text-2); transition:all .15s; border:none; background:transparent; font-family:inherit; }
+.run-mode.active { background:var(--surface-2); color:var(--text); }
+
+/* Spinner */
+.spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Toast */
+#toast { position:fixed; bottom:24px; right:24px; background:var(--surface-3); border:1px solid var(--border-2); border-radius:var(--radius-sm); padding:12px 16px; font-size:13px; box-shadow:var(--shadow); transform:translateY(80px); opacity:0; transition:all .25s ease; z-index:1000; max-width:360px; }
+#toast.show { transform:translateY(0); opacity:1; }
+#toast.error { border-color:var(--error); color:var(--error); }
+#toast.success { border-color:var(--success); color:var(--success); }
+
+/* Divider */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+.hidden { display:none !important; }
+.text-success { color:var(--success); }
+.text-error   { color:var(--error); }
+.text-warning { color:var(--warning); }
+.text-muted   { color:var(--text-3); }
+.mono { font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<header>
+  <div class="logo">⬡</div>
+  <h1>API TestGen AI</h1>
+  <span class="sub">— AI-powered test suite generator</span>
+  <div class="hspacer"></div>
+  <span class="hbadge" id="providerBadge">Not configured</span>
+</header>
+
+<div class="main">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+
+  <div>
+    <div class="sec-label">AI Provider</div>
+    <div class="fg">
+      <label for="provider">Provider</label>
+      <select id="provider" onchange="onProviderChange()"></select>
+    </div>
+    <div class="fg">
+      <label for="model">Model</label>
+      <select id="model"></select>
+    </div>
+    <div class="fg" id="apiKeyGroup">
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-…">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="sec-label">Auth (for running tests)</div>
+    <div class="fg">
+      <label for="bearer">Bearer Token</label>
+      <input type="password" id="bearer" placeholder="eyJ…">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div>
+    <div class="sec-label">Options</div>
+    <div class="fg">
+      <label for="count">Tests per endpoint</label>
+      <input type="number" id="count" placeholder="Default: 8–12" min="1" max="30">
+    </div>
+  </div>
+
+</aside>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚡</span> Generate Tests</div>
+
+    <div class="tabs" id="inputTabs">
+      <button class="tab active" data-tab="url">URL</button>
+      <button class="tab" data-tab="postman">Postman</button>
+      <button class="tab" data-tab="openapi">OpenAPI</button>
+    </div>
+
+    <!-- URL tab -->
+    <div class="tab-panel active" id="tab-url">
+      <div class="fg">
+        <label>Endpoint URL</label>
+        <div class="form-row">
+          <select id="method">
+            <option>GET</option><option>POST</option><option>PUT</option>
+            <option>PATCH</option><option>DELETE</option>
+          </select>
+          <input type="text" id="url" placeholder="https://api.example.com/v1/login">
+        </div>
+      </div>
+      <div class="fg">
+        <label for="payload">
+          Request Payload (JSON)
+          <button class="btn-inline" onclick="formatPayload()">Format</button>
+        </label>
+        <textarea id="payload" rows="4" placeholder='{"email": "user@example.com"}' onblur="formatPayload(true)"></textarea>
+        <span id="payloadErr" class="hidden" style="font-size:11px;color:var(--error);margin-top:3px;">Invalid JSON</span>
+      </div>
+      <div class="fg">
+        <label for="urlDesc">
+          Description
+          <button class="btn-inline" onclick="loadDescFile('urlDesc','urlDescFile')">📎 load file</button>
+        </label>
+        <input type="file" id="urlDescFile" accept=".txt,.md" class="hidden" onchange="readDescFile(this,'urlDesc')">
+        <textarea id="urlDesc" class="desc" placeholder="Describe the endpoint: valid inputs, expected responses, known behaviours…"></textarea>
+      </div>
+    </div>
+
+    <!-- Postman tab -->
+    <div class="tab-panel" id="tab-postman">
+      <div class="fg">
+        <label for="postmanFile">Postman Collection (v2.1 JSON)</label>
+        <input type="file" id="postmanFile" accept=".json">
+      </div>
+      <div class="fg">
+        <label for="postmanBaseUrl">Base URL</label>
+        <input type="text" id="postmanBaseUrl" placeholder="http://localhost:8000">
+      </div>
+      <div class="fg">
+        <label for="postmanDesc">
+          Description
+          <button class="btn-inline" onclick="loadDescFile('postmanDesc','postmanDescFile')">📎 load file</button>
+        </label>
+        <input type="file" id="postmanDescFile" accept=".txt,.md" class="hidden" onchange="readDescFile(this,'postmanDesc')">
+        <textarea id="postmanDesc" class="desc" placeholder="Optional — describe the API to improve accuracy…"></textarea>
+      </div>
+    </div>
+
+    <!-- OpenAPI tab -->
+    <div class="tab-panel" id="tab-openapi">
+      <div class="fg">
+        <label for="openapiFile">OpenAPI / Swagger Spec (.yaml or .json)</label>
+        <input type="file" id="openapiFile" accept=".yaml,.yml,.json">
+      </div>
+      <div class="fg">
+        <label for="openapiBaseUrl">Base URL override <span class="text-muted" style="font-weight:400">(optional)</span></label>
+        <input type="text" id="openapiBaseUrl" placeholder="Uses spec's server URL if blank">
+      </div>
+      <div class="fg">
+        <label for="openapiDesc">
+          Description
+          <button class="btn-inline" onclick="loadDescFile('openapiDesc','openapiDescFile')">📎 load file</button>
+        </label>
+        <input type="file" id="openapiDescFile" accept=".txt,.md" class="hidden" onchange="readDescFile(this,'openapiDesc')">
+        <textarea id="openapiDesc" class="desc" placeholder="Optional — applied to all endpoints…"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn" onclick="handleGenerate()">Generate Tests</button>
+    <div id="genLog" class="gen-log hidden"></div>
+  </div>
+
+  <!-- Test cases card -->
+  <div class="card hidden" id="testCasesCard">
+    <div class="card-title">
+      <span class="icon">🧪</span> Generated Tests
+      <span class="text-muted mono" id="tcCount" style="font-size:12px;margin-left:4px;"></span>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="downloadJSON()">⬇ Download JSON</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveToFile()">💾 Save to file</button>
+      </div>
+    </div>
+    <div id="testCasesContainer"></div>
+    <div class="divider"></div>
+
+    <!-- Run mode -->
+    <div class="sec-label" style="margin-bottom:10px;">Run Tests Via</div>
+    <div class="run-modes" id="runModes">
+      <button class="run-mode active" data-mode="http">HTTP</button>
+      <button class="run-mode" data-mode="tester">tester.py</button>
+      <button class="run-mode" data-mode="pytest">pytest</button>
+    </div>
+
+    <!-- HTTP options (none) -->
+    <div id="runOpts-http"></div>
+
+    <!-- tester.py options -->
+    <div id="runOpts-tester" class="hidden">
+      <div class="fg">
+        <label style="gap:8px;cursor:pointer;">
+          <input type="checkbox" id="genReport" style="width:auto;accent-color:var(--primary)">
+          Generate HTML report
+        </label>
+      </div>
+    </div>
+
+    <!-- pytest options -->
+    <div id="runOpts-pytest" class="hidden">
+      <div class="fg">
+        <label style="gap:8px;cursor:pointer;">
+          <input type="checkbox" id="genXml" style="width:auto;accent-color:var(--primary)">
+          Generate JUnit XML report
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-success" id="runBtn" onclick="handleRun()">Run Tests</button>
+  </div>
+
+  <!-- Results card -->
+  <div class="card hidden" id="resultsCard">
+    <div class="card-title" id="resultTitle"><span class="icon">📊</span> Results</div>
+
+    <!-- HTTP results -->
+    <div id="httpResults">
+      <div class="summary-bar" id="summaryBar"></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="resultsContainer"></div>
+    </div>
+
+    <!-- Terminal results (tester / pytest) -->
+    <div id="terminalResults" class="hidden">
+      <div class="summary-bar" id="termSummary"></div>
+      <pre class="terminal" id="termOutput"></pre>
+      <div class="btn-row mt-8" id="reportBtns"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let providers = {};
+let currentTab = 'url';
+let currentRunMode = 'http';
+let generatedCases = [];
+let baseUrl = '';
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    providers = await fetch('/api/providers').then(r => r.json());
+    buildProviderUI();
+    const s = await fetch('/api/settings').then(r => r.json());
+    if (s.provider) {
+      document.getElementById('provider').value = s.provider;
+      onProviderChange();
+      if (s.model) document.getElementById('model').value = s.model;
+      if (s.api_key) document.getElementById('apiKey').value = s.api_key;
+      updateBadge();
+    }
+  } catch(e) { toast('Failed to connect to server', 'error'); }
+}
+
+function buildProviderUI() {
+  const sel = document.getElementById('provider');
+  sel.innerHTML = Object.entries(providers).map(([k,v]) =>
+    `<option value="${k}">${v.label}</option>`
+  ).join('');
+  onProviderChange();
+}
+
+function onProviderChange() {
+  const key = document.getElementById('provider').value;
+  const cfg = providers[key];
+  if (!cfg) return;
+  const mSel = document.getElementById('model');
+  mSel.innerHTML = cfg.models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+  document.getElementById('apiKeyGroup').style.display = cfg.needs_key ? '' : 'none';
+  updateBadge();
+}
+
+function updateBadge() {
+  const key = document.getElementById('provider').value;
+  document.getElementById('providerBadge').textContent = providers[key]?.label ?? 'Not configured';
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#inputTabs .tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentTab = btn.dataset.tab;
+      document.querySelectorAll('#inputTabs .tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${currentTab}`).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.run-mode').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentRunMode = btn.dataset.mode;
+      document.querySelectorAll('.run-mode').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[id^="runOpts-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`runOpts-${currentRunMode}`).classList.remove('hidden');
+    });
+  });
+
+  init();
+});
+
+// ── Description file loader ────────────────────────────────────────────────
+function loadDescFile(textareaId, fileInputId) {
+  document.getElementById(fileInputId).click();
+}
+function readDescFile(input, textareaId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById(textareaId).value = e.target.result;
+    toast(`Loaded ${file.name}`, 'success');
+  };
+  reader.readAsText(file);
+}
+
+// ── JSON payload formatter ─────────────────────────────────────────────────
+function formatPayload(silent = false) {
+  const ta = document.getElementById('payload');
+  const err = document.getElementById('payloadErr');
+  if (!ta.value.trim()) return;
+  try {
+    ta.value = JSON.stringify(JSON.parse(ta.value), null, 2);
+    ta.classList.remove('error');
+    err.classList.add('hidden');
+  } catch(e) {
+    ta.classList.add('error');
+    if (!silent) err.classList.remove('hidden');
+  }
+}
+
+// ── Generation log ─────────────────────────────────────────────────────────
+function addLog(type, msg) {
+  const log = document.getElementById('genLog');
+  log.classList.remove('hidden');
+  const line = document.createElement('div');
+  line.className = `log-line log-${type}`;
+  const pfx = {info:'→', success:'✓', error:'✗', warning:'⚠'}[type] || '·';
+  line.textContent = `${pfx} ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+function clearLog() {
+  const log = document.getElementById('genLog');
+  log.innerHTML = '';
+  log.classList.add('hidden');
+}
+
+// ── Generate ───────────────────────────────────────────────────────────────
+async function handleGenerate() {
+  const provider = document.getElementById('provider').value;
+  const model    = document.getElementById('model').value;
+  const api_key  = document.getElementById('apiKey').value;
+  const count    = parseInt(document.getElementById('count').value) || null;
+
+  if (providers[provider]?.needs_key && !api_key) { toast('API key is required', 'error'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  setLoading(btn, true, 'Generating…');
+  hide('testCasesCard'); hide('resultsCard');
+  clearLog();
+  generatedCases = [];
+
+  try {
+    if (currentTab === 'url') {
+      const url = document.getElementById('url').value.trim();
+      if (!url) { toast('URL is required', 'error'); return; }
+      const method = document.getElementById('method').value;
+      const desc = document.getElementById('urlDesc').value || null;
+      const payload = document.getElementById('payload').value || null;
+      addLog('info', `Calling ${providers[provider].label}…`);
+      const data = await postJSON('/api/generate/url', {provider,model,api_key,url,method,payload,description:desc,count});
+      addLog('success', `Generated ${data.test_cases.length} test cases`);
+      generatedCases = data.test_cases;
+      baseUrl = data.base_url;
+
+    } else if (currentTab === 'postman') {
+      const file = document.getElementById('postmanFile').files[0];
+      const baseUrlVal = document.getElementById('postmanBaseUrl').value.trim();
+      const desc = document.getElementById('postmanDesc').value || null;
+      if (!file) { toast('Select a Postman collection', 'error'); return; }
+      if (!baseUrlVal) { toast('Base URL is required', 'error'); return; }
+
+      addLog('info', `Parsing ${file.name}…`);
+      const fd = new FormData(); fd.append('file', file);
+      const parsed = await postForm('/api/parse/postman', fd);
+      addLog('success', `Found ${parsed.endpoints.length} endpoints`);
+      baseUrl = baseUrlVal;
+
+      for (const ep of parsed.endpoints) {
+        addLog('info', `${ep.method} ${ep.path} — generating…`);
+        const fullUrl = baseUrlVal.replace(/\/$/, '') + ep.path;
+        const data = await postJSON('/api/generate/url', {
+          provider, model, api_key, count,
+          url: fullUrl, method: ep.method,
+          payload: ep.payload ? JSON.stringify(ep.payload) : null,
+          description: desc || ep.description || null,
+        });
+        addLog('success', `${ep.method} ${ep.path} — ${data.test_cases.length} tests`);
+        generatedCases.push(...data.test_cases);
+      }
+
+    } else {
+      const file = document.getElementById('openapiFile').files[0];
+      const baseUrlOverride = document.getElementById('openapiBaseUrl').value.trim();
+      const desc = document.getElementById('openapiDesc').value || null;
+      if (!file) { toast('Select an OpenAPI spec', 'error'); return; }
+
+      addLog('info', `Parsing ${file.name}…`);
+      const fd = new FormData(); fd.append('file', file);
+      const parsed = await postForm('/api/parse/openapi', fd);
+      baseUrl = baseUrlOverride || parsed.base_url;
+      addLog('success', `Found ${parsed.endpoints.length} operations — base URL: ${baseUrl}`);
+
+      for (const ep of parsed.endpoints) {
+        addLog('info', `${ep.method} ${ep.path} — generating…`);
+        const fullUrl = baseUrl.replace(/\/$/, '') + ep.path;
+        const data = await postJSON('/api/generate/url', {
+          provider, model, api_key, count,
+          url: fullUrl, method: ep.method,
+          payload: ep.payload ? JSON.stringify(ep.payload) : null,
+          description: desc || ep.description || null,
+        });
+        addLog('success', `${ep.method} ${ep.path} — ${data.test_cases.length} tests`);
+        generatedCases.push(...data.test_cases);
+      }
+    }
+
+    addLog('success', `Done — ${generatedCases.length} total test cases`);
+    renderTestCases(generatedCases);
+    show('testCasesCard');
+
+  } catch(e) {
+    addLog('error', e.message);
+    toast(e.message, 'error');
+  } finally {
+    setLoading(btn, false, 'Generate Tests');
+  }
+}
+
+// ── Render test cases ──────────────────────────────────────────────────────
+const CAT = { functional:'Functional', negative:'Negative', edge_case:'Edge Cases', validation:'Validation' };
+
+function renderTestCases(cases) {
+  document.getElementById('tcCount').textContent = `(${cases.length})`;
+  const groups = {};
+  cases.forEach(tc => { (groups[tc.category] = groups[tc.category] || []).push(tc); });
+
+  document.getElementById('testCasesContainer').innerHTML =
+    Object.entries(groups).map(([cat, items]) => `
+      <div class="category-group">
+        <div class="cat-header">
+          <span class="badge badge-${cat}">${CAT[cat] || cat}</span>
+          <span class="cat-count">${items.length}</span>
+        </div>
+        <div class="test-cards">
+          ${items.map(tc => `
+            <div class="test-card">
+              <div class="tc-name">${esc(tc.name)}</div>
+              <div class="tc-desc">${esc(tc.description)}</div>
+              <div class="tc-meta">
+                <span class="badge badge-${tc.input.method}">${tc.input.method}</span>
+                <span class="endpoint">${esc(tc.input.endpoint)}</span>
+                <span class="status-pill">${tc.expected_result.status_code}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+}
+
+// ── Download / Save ────────────────────────────────────────────────────────
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(generatedCases, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'test_cases.json';
+  a.click();
+}
+
+async function saveToFile() {
+  try {
+    const data = await postJSON('/api/save', {test_cases: generatedCases});
+    toast(`Saved to ${data.path}`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Run ────────────────────────────────────────────────────────────────────
+async function handleRun() {
+  const btn = document.getElementById('runBtn');
+  setLoading(btn, true, 'Running…');
+  hide('resultsCard');
+
+  const bearer = document.getElementById('bearer').value || null;
+
+  try {
+    if (currentRunMode === 'http') {
+      const data = await postJSON('/api/run', {test_cases:generatedCases, base_url:baseUrl, bearer});
+      renderHTTPResults(data);
+      show('httpResults'); hide('terminalResults');
+
+    } else if (currentRunMode === 'tester') {
+      const genReport = document.getElementById('genReport').checked;
+      const data = await postJSON('/api/run/tester', {test_cases:generatedCases, base_url:baseUrl, bearer, generate_report:genReport});
+      renderTerminalResults(data, 'tester.py');
+
+    } else {
+      const genXml = document.getElementById('genXml').checked;
+      const data = await postJSON('/api/run/pytest', {test_cases:generatedCases, base_url:baseUrl, bearer, generate_xml:genXml});
+      renderTerminalResults(data, 'pytest');
+    }
+
+    show('resultsCard');
+    document.getElementById('resultsCard').scrollIntoView({behavior:'smooth'});
+
+  } catch(e) { toast(e.message, 'error'); }
+  finally { setLoading(btn, false, 'Run Tests'); }
+}
+
+function renderHTTPResults(data) {
+  document.getElementById('resultTitle').innerHTML = '<span class="icon">📊</span> Results — HTTP';
+  const pct = data.total ? Math.round(data.passed / data.total * 100) : 0;
+
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sstat"><div class="num text-success">${data.passed}</div><div class="lbl">Passed</div></div>
+    <div class="sdiv"></div>
+    <div class="sstat"><div class="num ${data.failed > 0 ? 'text-error':'text-muted'}">${data.failed}</div><div class="lbl">Failed</div></div>
+    <div class="sdiv"></div>
+    <div class="sstat"><div class="num">${data.total}</div><div class="lbl">Total</div></div>
+    <div class="sspacer"></div>
+    <div class="sstat"><div class="num ${pct===100?'text-success':pct>=70?'text-warning':'text-error'}">${pct}%</div><div class="lbl">Pass rate</div></div>
+  `;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('resultsContainer').innerHTML = data.results.map(r => `
+    <div class="result-item ${r.passed?'passed':'failed'}">
+      <div class="result-icon">${r.passed?'✅':'❌'}</div>
+      <div>
+        <div class="result-name">${esc(r.name)}</div>
+        <div class="result-desc">${esc(r.description)}</div>
+        ${r.failures.map(f => `<div class="failure-msg">${esc(f)}</div>`).join('')}
+      </div>
+      <div class="result-meta">
+        <span class="result-code ${r.status_code===r.expected_status_code?'text-success':'text-error'}">${r.status_code??'—'}</span>
+        ${r.elapsed_ms!=null?`<span class="result-time">${r.elapsed_ms}ms</span>`:''}
+        <span class="badge badge-${r.category}">${CAT[r.category]||r.category}</span>
+      </div>
+    </div>
+  `).join('');
+
+  show('httpResults'); hide('terminalResults');
+}
+
+function renderTerminalResults(data, tool) {
+  document.getElementById('resultTitle').innerHTML = `<span class="icon">📊</span> Results — ${tool}`;
+  const exitOk = data.exit_code === 0;
+
+  document.getElementById('termSummary').innerHTML = `
+    <div class="sstat">
+      <div class="num ${exitOk?'text-success':'text-error'}">${exitOk?'PASSED':'FAILED'}</div>
+      <div class="lbl">Exit code ${data.exit_code}</div>
+    </div>
+    <div class="sspacer"></div>
+    <div class="sstat"><div style="font-size:12px;color:var(--text-2)">${tool}</div></div>
+  `;
+
+  document.getElementById('termOutput').textContent = data.output || '(no output)';
+
+  const btns = document.getElementById('reportBtns');
+  btns.innerHTML = '';
+  if (data.report_url) {
+    const a = document.createElement('a');
+    a.href = data.report_url; a.target = '_blank';
+    a.className = 'btn btn-ghost'; a.textContent = '🗂 Open HTML Report';
+    btns.appendChild(a);
+  }
+  if (data.xml_url) {
+    const a = document.createElement('a');
+    a.href = data.xml_url; a.target = '_blank'; a.download = 'results.xml';
+    a.className = 'btn btn-ghost'; a.textContent = '⬇ Download JUnit XML';
+    btns.appendChild(a);
+  }
+
+  hide('httpResults'); show('terminalResults');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+async function postJSON(url, body) {
+  const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const json = await res.json().catch(() => ({detail:'Invalid server response'}));
+  if (!res.ok) throw new Error(json.detail || `HTTP ${res.status}`);
+  return json;
+}
+async function postForm(url, fd) {
+  const res = await fetch(url, {method:'POST', body:fd});
+  const json = await res.json().catch(() => ({detail:'Invalid server response'}));
+  if (!res.ok) throw new Error(json.detail || `HTTP ${res.status}`);
+  return json;
+}
+function setLoading(btn, on, label) {
+  btn.disabled = on;
+  btn.innerHTML = on ? `<div class="spinner"></div>${label}` : label;
+}
+function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3500);
+}
+</script>
+</body>
+</html>

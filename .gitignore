@@ -2,6 +2,8 @@ settings.json
 test_run.log
 *.html
 !examples/reports/*.html
+!static/index.html
+!static/pytest-report.html
 __pycache__/
 *.pyc
 *.pyo

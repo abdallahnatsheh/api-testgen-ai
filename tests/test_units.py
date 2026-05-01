@@ -311,3 +311,185 @@ class TestCLIArgs:
         args.auth_url = None
         with pytest.raises(SystemExit):
             main._build_auth_headers(args)
+
+
+# ---------------------------------------------------------------------------
+# openapi_importer.py
+# ---------------------------------------------------------------------------
+
+class TestOpenAPIImporter:
+    SAMPLE_YAML = "examples/openapi/api-testgen-sample.yaml"
+
+    def test_load_sample_yaml_request_count(self):
+        from openapi_importer import load_spec
+        _, reqs = load_spec(self.SAMPLE_YAML)
+        assert len(reqs) == 3
+
+    def test_base_url_extracted(self):
+        from openapi_importer import load_spec
+        base_url, _ = load_spec(self.SAMPLE_YAML)
+        assert base_url == "http://localhost:8000"
+
+    def test_methods_are_uppercase(self):
+        from openapi_importer import load_spec
+        _, reqs = load_spec(self.SAMPLE_YAML)
+        for r in reqs:
+            assert r.method == r.method.upper()
+
+    def test_paths_have_leading_slash(self):
+        from openapi_importer import load_spec
+        _, reqs = load_spec(self.SAMPLE_YAML)
+        for r in reqs:
+            assert r.path.startswith("/")
+
+    def test_login_post_has_payload_with_email(self):
+        from openapi_importer import load_spec
+        _, reqs = load_spec(self.SAMPLE_YAML)
+        post = next(r for r in reqs if r.method == "POST")
+        assert post.path == "/login"
+        assert isinstance(post.payload, dict)
+        assert "email" in post.payload
+
+    def test_swagger2_base_url(self, tmp_path):
+        from openapi_importer import load_spec
+        spec = {
+            "swagger": "2.0",
+            "info": {"title": "Test", "version": "1.0"},
+            "host": "api.example.com",
+            "basePath": "/v1",
+            "schemes": ["https"],
+            "paths": {
+                "/items": {
+                    "get": {
+                        "summary": "List items",
+                        "responses": {"200": {"description": "OK"}}
+                    }
+                }
+            }
+        }
+        f = tmp_path / "swagger.json"
+        f.write_text(json.dumps(spec))
+        base_url, _ = load_spec(str(f))
+        assert base_url == "https://api.example.com/v1"
+
+    def test_swagger2_body_parameter_extracted_as_payload(self, tmp_path):
+        from openapi_importer import load_spec
+        spec = {
+            "swagger": "2.0",
+            "info": {"title": "Test", "version": "1.0"},
+            "host": "localhost",
+            "paths": {
+                "/login": {
+                    "post": {
+                        "summary": "Login",
+                        "parameters": [{
+                            "in": "body",
+                            "name": "body",
+                            "schema": {
+                                "type": "object",
+                                "required": ["username"],
+                                "properties": {
+                                    "username": {"type": "string", "example": "alice"}
+                                }
+                            }
+                        }],
+                        "responses": {"200": {"description": "OK"}}
+                    }
+                }
+            }
+        }
+        f = tmp_path / "swagger2.json"
+        f.write_text(json.dumps(spec))
+        _, reqs = load_spec(str(f))
+        assert len(reqs) == 1
+        assert reqs[0].payload == {"username": "alice"}
+
+    def test_empty_paths_raises(self, tmp_path):
+        from openapi_importer import load_spec
+        spec = {"openapi": "3.0.0", "info": {"title": "T", "version": "1"}, "paths": {}}
+        f = tmp_path / "empty.json"
+        f.write_text(json.dumps(spec))
+        with pytest.raises(ValueError, match="No operations found"):
+            load_spec(str(f))
+
+    def test_json_format_spec_loads(self, tmp_path):
+        from openapi_importer import load_spec
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "T", "version": "1"},
+            "servers": [{"url": "http://api.test"}],
+            "paths": {
+                "/health": {
+                    "get": {
+                        "summary": "Health check",
+                        "responses": {"200": {"description": "OK"}}
+                    }
+                }
+            }
+        }
+        f = tmp_path / "spec.json"
+        f.write_text(json.dumps(spec))
+        base_url, reqs = load_spec(str(f))
+        assert base_url == "http://api.test"
+        assert reqs[0].path == "/health"
+        assert reqs[0].method == "GET"
+
+
+# ---------------------------------------------------------------------------
+# ai_client._parse_response
+# ---------------------------------------------------------------------------
+
+class TestParseResponse:
+    VALID_ITEM = {
+        "name": "test",
+        "category": "functional",
+        "description": "desc",
+        "input": {"method": "GET", "endpoint": "/users", "payload": None, "headers": {}},
+        "expected_result": {"status_code": 200}
+    }
+
+    def _json(self, items=None):
+        return json.dumps([self.VALID_ITEM] if items is None else items)
+
+    def test_plain_json_array(self):
+        from ai_client import _parse_response
+        cases = _parse_response(self._json())
+        assert len(cases) == 1
+        assert cases[0].input.method == "GET"
+
+    def test_fenced_with_language_tag(self):
+        from ai_client import _parse_response
+        cases = _parse_response(f"```json\n{self._json()}\n```")
+        assert len(cases) == 1
+
+    def test_fenced_without_language_tag(self):
+        from ai_client import _parse_response
+        cases = _parse_response(f"```\n{self._json()}\n```")
+        assert len(cases) == 1
+
+    def test_malformed_json_repaired_via_fallback(self):
+        from ai_client import _parse_response
+        # trailing comma — invalid JSON, json_repair fixes it
+        malformed = f"[{json.dumps(self.VALID_ITEM)},]"
+        cases = _parse_response(malformed)
+        assert len(cases) == 1
+
+    def test_invalid_case_skipped_valid_returned(self, caplog):
+        from ai_client import _parse_response
+        import logging
+        bad = {"name": "bad", "category": "functional"}  # missing required fields
+        with caplog.at_level(logging.WARNING, logger="ai_client"):
+            cases = _parse_response(self._json([self.VALID_ITEM, bad]))
+        assert len(cases) == 1
+        assert any("Skipping" in r.message for r in caplog.records)
+
+    def test_all_invalid_raises_value_error(self):
+        from ai_client import _parse_response
+        with pytest.raises(ValueError, match="All test cases"):
+            _parse_response(json.dumps([{"name": "bad"}, {"no_fields": True}]))
+
+    def test_unclosed_fence_handled(self):
+        from ai_client import _parse_response
+        # fence with no closing ``` — inner content still parsed
+        cases = _parse_response(f"```json\n{self._json()}")
+        assert len(cases) == 1

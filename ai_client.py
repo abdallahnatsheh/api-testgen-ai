@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from models import TestCase
 
@@ -218,8 +219,6 @@ def generate_test_cases(method: str, endpoint: str, payload: str | None, descrip
         f"Payload:  {payload or 'None'}\n"
         f"API Description: {description or 'None'}"
     )
-
-    import time
 
     last_exc: Exception | None = None
     for attempt in range(3):

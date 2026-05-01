@@ -27,35 +27,35 @@ curl -s http://localhost:8000/users > /dev/null && echo "running" || echo "not r
 
 2. If not running, start it in the background:
 ```bash
-python3 api.py &
+venv/bin/python3 api.py &
 sleep 2
 ```
 
 3. Run the tester:
 ```bash
-python3 tester.py <json_file> http://localhost:8000
+venv/bin/python3 tester.py <json_file> http://localhost:8000
 ```
 
 ## Steps — Real External API
 
 No auth:
 ```bash
-python3 tester.py <json_file> https://api.example.com
+venv/bin/python3 tester.py <json_file> https://api.example.com
 ```
 
 With Bearer token:
 ```bash
-python3 tester.py <json_file> https://api.example.com --bearer eyJ0eXAiOiJKV1Q...
+venv/bin/python3 tester.py <json_file> https://api.example.com --bearer eyJ0eXAiOiJKV1Q...
 ```
 
 With API key header:
 ```bash
-python3 tester.py <json_file> https://api.example.com --header "X-API-Key=abc123"
+venv/bin/python3 tester.py <json_file> https://api.example.com --header "X-API-Key=abc123"
 ```
 
 With auto-login (auth flow):
 ```bash
-python3 tester.py <json_file> http://localhost:8000 \
+venv/bin/python3 tester.py <json_file> http://localhost:8000 \
   --auth-url http://localhost:8000/login \
   --auth-payload '{"email":"alice@example.com","password":"alice123"}' \
   --auth-token-path token
@@ -63,7 +63,7 @@ python3 tester.py <json_file> http://localhost:8000 \
 
 Multiple headers (repeatable):
 ```bash
-python3 tester.py <json_file> https://api.example.com --bearer <token> --header "X-Tenant=acme"
+venv/bin/python3 tester.py <json_file> https://api.example.com --bearer <token> --header "X-Tenant=acme"
 ```
 
 ## Reporting
@@ -75,7 +75,7 @@ python3 tester.py <json_file> https://api.example.com --bearer <token> --header 
 ## Known test files (examples/)
 
 | File | Endpoint | Notes |
-|------|----------|-------|
+|------|----------|---------|
 | `examples/login/tests_gemini.json` | `/login` | Gemini-generated, includes locked account bug test |
 | `examples/login/tests_ollama.json` | `/login` | Ollama-generated |
 | `examples/users/tests_gemini.json` | `/users` | GET all users |

@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+settings.json
+test_run.log
+.claude/
+*.html
+!static/index.html
+postman_test_output.json
+.git/

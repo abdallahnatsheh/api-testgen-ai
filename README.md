@@ -18,6 +18,22 @@ CLI tool that uses AI to generate and run API test cases. Supports **Gemini**, *
 
 ## Setup
 
+### Docker (recommended)
+
+```bash
+docker compose up --build
+# web UI → http://localhost:8080
+# sample API → http://localhost:8000
+```
+
+To run only the web UI (bring your own API to test):
+
+```bash
+docker compose up web --build
+```
+
+### Local
+
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt

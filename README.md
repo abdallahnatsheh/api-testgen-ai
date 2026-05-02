@@ -18,6 +18,23 @@ CLI tool that uses AI to generate and run API test cases. Supports **Gemini**, *
 
 ## Setup
 
+### Docker (recommended)
+
+```bash
+echo '{}' > settings.json   # required before first run — Docker creates it as a dir otherwise
+docker compose up --build
+# web UI → http://localhost:8080
+# sample API → http://localhost:8000
+```
+
+To run only the web UI (bring your own API to test):
+
+```bash
+docker compose up web --build
+```
+
+### Local
+
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -174,7 +191,7 @@ The tool POSTs to `--auth-url`, extracts the token at `--auth-token-path` (dot-n
 ```
 
 | Field | Purpose |
-|-------|---------|
+|-------|--------|
 | `category` | `functional` / `negative` / `edge_case` / `validation` |
 | `contains_key` | Assert this key exists in the JSON response |
 | `contains_value` | Assert `{key: value}` in response (e.g. `{"count": 3}`) |

@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./settings.json:/app/settings.json:rw
+    restart: unless-stopped
+
+  api:
+    build: .
+    command: venv/bin/python3 api.py
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

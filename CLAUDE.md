@@ -9,6 +9,7 @@ CLI tool and web UI that uses AI (Gemini, Claude, OpenAI, Ollama) to generate an
 ## Commands
 
 ```bash
+docker compose up --build                                      # web UI :8080 + sample API :8000
 venv/bin/python3 -m pip install -r requirements.txt
 venv/bin/python3 api.py                                        # sample FastAPI server on :8000
 venv/bin/python3 server.py                                     # web UI server on :8080
